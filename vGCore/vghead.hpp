@@ -14,6 +14,9 @@ class VGCORE_EXPORT vGApp;
 class VGCORE_EXPORT vGMenuBase;
 class VGCORE_EXPORT vGMessageBox;
 
+class VGCORE_EXPORT FrPlugin;
+class VGCORE_EXPORT FrPluginApp;
+
 class vGImageLabel :public QLabel {
 
 	Q_OBJECT
@@ -295,7 +298,7 @@ protected:
 	void setLogger();
 	//读取默认的日志文件，并返回该日志文件的json
 	//读取失败抛异常
-	//TODO 该函数没有进行测试
+	//! 该函数没有进行测试
 	vGConfig readDefaultConfig();
 	//加载插件
 	void LoadPlugins();
@@ -305,14 +308,58 @@ private:
 	vGC_Skin skin_;
 	value_type plugins_; //插件
 	std::set<vGPlugin*> activities_;//活动的插件（创建了对象,来源于plugins_）
+
+	std::vector<FrPlugin> fplugins_;
 	std::shared_ptr<vGConfig> config_;
 	std::shared_ptr<vGAppInfomation> info_;
 	std::shared_ptr<spdlog::logger> log_;
 };
 
 
+//每个插件都有这个基础对象
+class FrPlugin {
+public:
+	FrPlugin();
+	FrPlugin(const FrPlugin&) = delete;
+	//初始化插件
+	virtual void initialize();
+	//释放插件资源
+	virtual void release();
+	QByteArray package()const { return package_; }
+	QByteArray version() const { return version_; }
+	QString path()const { return path_; }
+	QString name()const { return name_; }
+	QString description() const { return description_; }
+	QPixmap logo()const { return logo_; }
+	//创建对象，失败抛异常
+	//TODO 完善代码
+	void create();
+	FrPluginApp widget();
+protected:
+	QByteArray package_;//包名，格式 app.***.com
+	QByteArray version_;//版本，e.g. 1.0.1
+	//应用路径,为了以后方便扩展
+	//e.g. .\plugins\date\Core.dll 
+	QString path_;
+	//应用名称,不同于包名，应用名称可以重复
+	QString name_;
+	//应用简短描述
+	QString description_;
+	//插件自动处理图像与主题适应
+	//注意logo可以是无效值
+	//!主程序只需要获得图像句柄即可
+	QPixmap logo_;
+	//app对象，在调用create函数时会被创建   ==> 窗口后台
+	//destory会销毁该对象,释放相对应资源 ==> 应用后台
+	QPointer<FrPluginApp> widget_;
+};
+class FrPluginApp {
+
+};
+
 //输入svg图片，转换颜色为默认颜色(path,fill属性)
 VGCORE_EXPORT void SetAllTag(QDomElement& elem, QString strtagname, QString strattr, QString strattrval);
+//Svg格式图片转换为QPixmap
 VGCORE_EXPORT QPixmap Svg2Pixmap(QByteArray _xml, QSize _pix_size);
 
 #if _HAS_NODISCARD

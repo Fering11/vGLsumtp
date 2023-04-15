@@ -388,6 +388,7 @@ void vGMenuBase::UpdateLayout(vGMenuBase::Action _action, QSize _size) {
 	default:
 		//啥也不做
 		break;
+		
 	}
 	if(!para_ag.isNull())
 		para_ag->start();
@@ -1316,6 +1317,20 @@ void vGMessageBox::box(QWidget* _parent, QString _text, vGMsgType _type, quint16
 	box->show();
 }
 
+///////////////////////// FrPlugin /////////////////////////////////
+/////////// 插件类
+//
+
+FrPlugin::FrPlugin(){
+}
+
+void FrPlugin::initialize() {
+	package_ = "app.unknow.com";
+	version_ = "0.0.1";
+}
+
+void FrPlugin::release(){}
+
 
 // //////////////////// Other Function //////////////////////////
 
@@ -1351,3 +1366,4 @@ bool operator==(const vGPlugin& _Left, const vGPlugin& _Right)
 	return !QFileInfo(_Left.library()->fileName()).fileName().
 		compare(QFileInfo(_Right.lib_->fileName()).fileName());
 }
+

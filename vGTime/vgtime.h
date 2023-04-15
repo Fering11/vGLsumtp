@@ -35,4 +35,10 @@ private:
     Ui::vGTime *ui;
 };
 
+class FrTime :public FrPlugin {
+public:
+    void initialize();
+    void release();
+};
+
 #endif // VGTIME_H

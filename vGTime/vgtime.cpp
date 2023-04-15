@@ -1,7 +1,16 @@
 #include "vgtime.h"
 #include "ui_vgtime.h"
 
+//全局FrTime实例
+FrTime _g_ex_frtime;
+
+FrPlugin* GetInstance() {
+    return reinterpret_cast<FrPlugin*>(std::addressof(_g_ex_frtime));
+}
+
 #define qctr (QCoreApplication::tr)
+
+
 vGTime::vGTime(vGMenuBase*parent,vGPlugin* _pl) :
     vGAppWidBase(parent,_pl),
     ui(new Ui::vGTime)
@@ -80,4 +89,18 @@ void get_info(vGPluginInfo* _info) {
    _info->description = qctr("show now time");
    _info->version = qctr("1.0.0");
    _info->logo = Svg2Pixmap(vGTime::GetSvg(), vGp->Config().base().win_size());
+}
+// //////////////////////////
+///
+///
+void FrTime::initialize(){
+    package_ = "app.clock.sys";
+    name_ = qctr("clock");
+    description_ = qctr("show now time");
+    version_ = "1.0.0";
+    logo_ = Svg2Pixmap(vGTime::GetSvg(), vGp->Config().base().win_size());
+}
+
+void FrTime::release(){
+
 }

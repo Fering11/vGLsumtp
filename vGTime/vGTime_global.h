@@ -13,5 +13,7 @@ extern "C" {
 	VGTIME_EXPORT void destory_object(vGAppWidBase* _parent);
 	VGTIME_EXPORT void get_info(vGPluginInfo* _info);
 
+	//获取全局实例
+	VGTIME_EXPORT FrPlugin* GetInstance();
 }
 #endif // VGTIME_GLOBAL_H
