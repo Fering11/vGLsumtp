@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/core">
+        <file alias="unknow_icon">Resource/Application.svg</file>
+        <file alias="default_config">Resource/default_config.json</file>
+    </qresource>
+</RCC>

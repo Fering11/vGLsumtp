@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/core">
+        <file alias="unknow_icon">Resource/Application.svg</file>
+        <file alias="default_config">Resource/default_config.json</file>
+        <file alias="dark">Resource/dark.json</file>
+        <file alias="bk_error">Resource/bk_error.png</file>
+        <file alias="bk_info">Resource/bk_info.png</file>
+        <file alias="bk_success">Resource/bk_success.png</file>
+        <file alias="bk_warning">Resource/bk_warning.png</file>
+    </qresource>
+</RCC>

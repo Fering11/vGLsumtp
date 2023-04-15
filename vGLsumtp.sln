@@ -1,0 +1,52 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33213.308
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vGLsumtpMainFrame", "vGLsumtpMainFrame\vGLsumtpMainFrame.vcxproj", "{29EDB84A-4FF1-377B-9A93-ADE96607B224}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3B9C8769-55FA-31E3-B7DA-CCCD56B599EF} = {3B9C8769-55FA-31E3-B7DA-CCCD56B599EF}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vGCore", "vGCore\vGCore.vcxproj", "{3B9C8769-55FA-31E3-B7DA-CCCD56B599EF}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vGSetting", "vGSetting\vGSetting.vcxproj", "{C6B5E49C-48DE-3D9D-96AA-5B23D456F721}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3B9C8769-55FA-31E3-B7DA-CCCD56B599EF} = {3B9C8769-55FA-31E3-B7DA-CCCD56B599EF}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vGTime", "vGTime\vGTime.vcxproj", "{9EBF292F-9856-3BD0-AB5E-27E9265D5926}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3B9C8769-55FA-31E3-B7DA-CCCD56B599EF} = {3B9C8769-55FA-31E3-B7DA-CCCD56B599EF}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{29EDB84A-4FF1-377B-9A93-ADE96607B224}.Debug|x64.ActiveCfg = Debug|x64
+		{29EDB84A-4FF1-377B-9A93-ADE96607B224}.Debug|x64.Build.0 = Debug|x64
+		{29EDB84A-4FF1-377B-9A93-ADE96607B224}.Release|x64.ActiveCfg = Release|x64
+		{29EDB84A-4FF1-377B-9A93-ADE96607B224}.Release|x64.Build.0 = Release|x64
+		{3B9C8769-55FA-31E3-B7DA-CCCD56B599EF}.Debug|x64.ActiveCfg = Debug|x64
+		{3B9C8769-55FA-31E3-B7DA-CCCD56B599EF}.Debug|x64.Build.0 = Debug|x64
+		{3B9C8769-55FA-31E3-B7DA-CCCD56B599EF}.Release|x64.ActiveCfg = Release|x64
+		{3B9C8769-55FA-31E3-B7DA-CCCD56B599EF}.Release|x64.Build.0 = Release|x64
+		{C6B5E49C-48DE-3D9D-96AA-5B23D456F721}.Debug|x64.ActiveCfg = Debug|x64
+		{C6B5E49C-48DE-3D9D-96AA-5B23D456F721}.Debug|x64.Build.0 = Debug|x64
+		{C6B5E49C-48DE-3D9D-96AA-5B23D456F721}.Release|x64.ActiveCfg = Release|x64
+		{C6B5E49C-48DE-3D9D-96AA-5B23D456F721}.Release|x64.Build.0 = Release|x64
+		{9EBF292F-9856-3BD0-AB5E-27E9265D5926}.Debug|x64.ActiveCfg = Debug|x64
+		{9EBF292F-9856-3BD0-AB5E-27E9265D5926}.Debug|x64.Build.0 = Debug|x64
+		{9EBF292F-9856-3BD0-AB5E-27E9265D5926}.Release|x64.ActiveCfg = Release|x64
+		{9EBF292F-9856-3BD0-AB5E-27E9265D5926}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B8157783-1CD8-429E-AA16-B746807188E5}
+		Qt5Version = 5.13.2_msvc2017_64
+	EndGlobalSection
+EndGlobal

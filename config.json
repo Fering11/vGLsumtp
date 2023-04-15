@@ -1,0 +1,10 @@
+{
+   "base": {
+      "log_file_count": 0,
+      "log_file_size": 102400,
+      "log_level": 1,
+      "log_path": "./log",
+      "plugins": "./plugins"
+   },
+   "server": null
+}
