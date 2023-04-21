@@ -56,16 +56,47 @@
 
 #include "vGCore_global.h"
 
-class vGError :public std::runtime_error{
+enum class FrErrorStatue {
+	Unknow,//未知错误
+	InvalidParameter, //无效参数
+	InvalidFile,  //无效文件
+	Peripheral, //外围错误(非程序内部的错误)
+	Nullptr		//空地址
+};
+class FrError :public std::exception {
 public:
-	vGError(unsigned int _code, const char* const _msg = "")noexcept :
-		runtime_error(_msg), code_(_code) {}
-	unsigned int code() const noexcept {
-		return code_;
+	FrError()noexcept :statue_(FrErrorStatue::Unknow),
+		msg_(nullptr) {
+	}
+	explicit FrError(FrErrorStatue _statue, const char* const _msg)noexcept :
+		statue_(_statue), msg_(nullptr) {
+		if (_msg) {
+			_set_msg(_msg);
+		}
+	}
+	FrError(const FrError& _o)noexcept :msg_(nullptr), statue_(_o.statue_) {
+		if (_o.msg_) {
+			_set_msg(_o.msg_);
+		}
+	}
+	~FrError() noexcept {
+		if (msg_) {
+			delete[] msg_;
+		}
+	}
+	char const* what() const {
+		return msg_ ? msg_ : "Unknow Error";
+	}
+	FrErrorStatue code() const {
+		return statue_;
 	}
 private:
-	std::string what_;
-	unsigned int code_;
-
+	void _set_msg(const char* const _msg) {
+		size_t length = strnlen(_msg, 0xFFFF) + 1;
+		msg_ = new char[length]();
+		strcpy_s(msg_, length, _msg);
+	}
+	char* msg_;
+	FrErrorStatue statue_;
 };
 #endif

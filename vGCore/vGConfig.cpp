@@ -36,7 +36,7 @@ QRgb __String2Rgba(QString _color) {
 	bool ok = false;
 	auto reg = _color.right(_color.length() - 1).toUInt(&ok, 16);
 	if (!ok) {
-		throw vGError(_AE_SKIN_FILE, "The Skin file has been broken.");
+		throw FrError(FrErrorStatue::InvalidFile, "The Skin file has been broken.");
 	} else if (reg < 0x1000000) {//是rgb的格式转为rgba的格式
 		reg += 0xff000000;
 	}

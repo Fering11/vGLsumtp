@@ -35,10 +35,39 @@ private:
     Ui::vGTime *ui;
 };
 
+class FrGTime : public FrPluginWidget
+{
+    using Parent = FrPluginWidget;
+    Q_OBJECT
+
+public:
+    explicit FrGTime(vGMenuBase* parent, FrPlugin*);
+    ~FrGTime();
+
+    static QByteArray GetSvg();
+public slots:
+    //更新时间
+    void update_time();
+    //更新大小
+    //输入当前窗口大小，自适应更改
+    void update_size(QSize _size);
+    virtual void UpdateSkins();
+
+protected:
+    void timerEvent(QTimerEvent* event);
+    void resizeEvent(QResizeEvent* event);
+private:
+    int timer_id_;
+    Ui::vGTime* ui;
+};
+
 class FrTime :public FrPlugin {
 public:
     void initialize();
-    void release();
+    //详情看父类
+    void create();
+    bool service() { return false; }
+
 };
 
 #endif // VGTIME_H

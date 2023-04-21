@@ -25,10 +25,14 @@ vGMenuBase::vGMenuBase(QWidget* _parent, QLayout* _back) :
 	QWidget(_parent), front_(nullptr), now_pos_(0), easing_curve_(0),
 	duration_time_(0), ui_ac_()
 {
+	//设置主菜单地址
+	vGp->setMenu(this);
+
 	background_ = _back;
+	//绑定刷新皮肤信号
 	connect(this, &vGMenuBase::update_skin, this, &vGMenuBase::UpdateSkin);
 	this->setObjectName("vGMainMenu");
-	__initialize_ui();
+	__initialize_ui(); //界面初始化和动画处理
 	setFocusPolicy(Qt::StrongFocus); //仅仅是底层UI界面
 }
 
@@ -392,7 +396,8 @@ void vGMenuBase::UpdateLayout(vGMenuBase::Action _action, QSize _size) {
 	}
 	if(!para_ag.isNull())
 		para_ag->start();
-	emit update_skin();
+	//注:更新布局不需要更新皮肤
+	//xemit update_skin();
 }
 void vGMenuBase::resizeEvent(QResizeEvent* _event)
 {
@@ -500,7 +505,7 @@ bool vGMenuBase::event(QEvent* _event)
 	
 	return QWidget::event(_event);
 }
-////////////////////// VGAPPWIDBASE ////////////////////////////////////////
+/////////////////// VGAPPWIDBASE ////////////////////////////////////////
 // 
 // JUST A CROSS LINE 
 //
@@ -519,7 +524,7 @@ vGAppWidBase::vGAppWidBase(vGMenuBase* _parent, vGPlugin* _plugin) :
 	//确保plugin存在
 	if (!plugin_) {
 		vGlog->critical("{:d} |vGAppWidBase: Illegal parameter [plugin_ == nullptr]", _AE_FUNC_PARAM);
-		throw vGError(_AE_FUNC_PARAM, "vGAppWidBase: Illegal parameter [plugin_ == nullptr]");
+		throw FrError(FrErrorStatue::InvalidParameter, "vGAppWidBase: Illegal parameter [plugin_ == nullptr]");
 	}
 
 }
@@ -750,7 +755,6 @@ void save_config(std::shared_ptr<vGConfig> _config) {
 vGApp::vGApp(int argc, char* argv[], std::shared_ptr<vGAppInfomation> _argu) :
 	QApplication(argc, argv)
 {
-	DebugBox("Debug me", "debug");
 	info_ = _argu;
 	setApplicationVersion(info_->version_);
 	setApplicationName(info_->app_name);
@@ -781,23 +785,25 @@ void vGApp::initialize()
 		info_->attribute_ |= Restart;
 		info_->log_file_size = 20480;
 		info_->log_level = spdlog::level::trace; //调低记录等级，方便后续跟踪
-		throw vGError(_AE_CONFIG_FILE, "Prepare for restarting...");
+		throw FrError(FrErrorStatue::InvalidFile, "Config file has been broken.Prepare for restarting...");
 	}
-	//设置日志系统
+	//设置日志系统,之后才可以使用
 	setLogger();
 	//将输入命令出现的log输入
 	for (auto& in : info_->msg_buf) {
 		vGlog->debug(QSTD(in));
 	}
+	vgTrace("Log system initialized {}", 01);
 	//加载皮肤
 	LoadSkin();
 	//加载插件
+	//!现在还没有初始化菜单
 	LoadPlugins();
 	//插件是必须存在至少一个，否则报错
 	if (plugins_.empty()) {
 		info_->attribute_ |= Critical;
 		vGlog->critical("The plug-in is not loaded correctly.");
-		throw vGError(_AE_PLUGIN_NULL, "");
+		throw FrError(FrErrorStatue::Peripheral, "The number of plugins is 0");
 	}
 	setvGAtt(Initialized);
 }
@@ -880,6 +886,13 @@ std::shared_ptr<spdlog::logger> vGApp::_getLogger()
 	return log_;
 }
 
+void vGApp::setMenu(QPointer<vGMenuBase> _point){
+	if (_point.isNull()) {
+
+	}
+	menu_ = _point;
+}
+
 void vGApp::setLogger()
 {
 	QString file_path = info_->log_file;
@@ -896,13 +909,32 @@ void vGApp::setLogger()
 					//TODO 判断config->log_file_size是否为0，增加恢复函数
 					info_->log_file_size = config_->base().log_file_size;
 				}
+#ifdef _DEBUG
+#ifdef _WINDOWS
+				AllocConsole();
+				freopen("CON", "w", stdout);
+#endif
+				spdlog::init_thread_pool(4092, 2);
+				auto file_logger = std::make_shared<spdlog::sinks::rotating_file_sink_mt>
+					(de_name, info_->log_file_size * 1024, info_->log_file_count, false, spdlog::file_event_handlers{});
+				file_logger->set_level(spdlog::level::level_enum(info_->log_level));
+
+				auto console_logger = std::make_shared<spdlog::sinks::wincolor_stdout_sink_mt>(spdlog::color_mode::always);
+				console_logger->set_level(spdlog::level::trace);
+				log_ = std::make_shared<spdlog::async_logger>(
+					vGp->applicationName().toStdString(),
+					spdlog::sinks_init_list{ console_logger,file_logger }, spdlog::thread_pool());
+				//Debug下每2秒刷新一次
+				spdlog::flush_every(std::chrono::seconds(2));
+#else
+
 				log_ = spdlog::rotating_logger_mt<spdlog::async_factory>
 					(vGp->applicationName().toStdString(), de_name,
 						info_->log_file_size * 1024, info_->log_file_count);
+				log_->set_level(spdlog::level::level_enum(info_->log_level));
+#endif
 				//[时:分:秒-微秒][记录器名称][线程id][等级] 信息
 				log_->set_pattern("[%H:%M:%S-%f][%n][%t][%l] %v ");
-				//log 已经添加到全局
-				log_->set_level(spdlog::level::level_enum(info_->log_level));
 				//log_->flush_on(spdlog::level::err);
 				vgDebug("The log has set up.");
 				set_success = true;
@@ -925,7 +957,7 @@ void vGApp::setLogger()
 			arg(QN2S(_AE_LOG_FILE), file_path));
 		vGp->exit(_APP_RESTART);
 		info_->attribute_ |= Restart;
-		throw vGError(_AE_LOG_FILE, "Logger error");
+		throw FrError(FrErrorStatue::InvalidFile, "Unable to create log file");
 		return;
 	}
 }
@@ -969,6 +1001,19 @@ void vGApp::LoadPlugins()
 				vGlog->info("\"{}\" Plugin has been loaded", file.fileName().toStdString());
 			}
 		}
+
+		//FrPlugin:
+		using __GetInstance = FrPlugin*(*)();
+		auto c1 = file.absoluteFilePath();
+		__GetInstance cGetInstance = (__GetInstance)lib.resolve("GetInstance");
+		if(cGetInstance){
+			FrPlugin* pointer = cGetInstance();
+			if (pointer)
+				fplugins_.push_back(std::shared_ptr<FrPlugin>(pointer));
+			else
+				vgTrace("Loaded Plugin Faild");
+		}
+
 		lib.unload();
 	}
 	plugins_.shrink_to_fit();
@@ -1014,7 +1059,7 @@ void vGApp::LoadSkin()
 	}
 }
 
-// //////////////////// vGPlugin //////////////////////////////////
+// //////////////////// vGPlugin //////////////////////////////////####################
 vGPlugin::vGPlugin():
 	lib_(nullptr), object_(nullptr) {
 }
@@ -1138,7 +1183,7 @@ QLibrary* vGPlugin::library()const{
 	return lib_;
 }
 
-// ///////////////////// vGMessageBox ///////////////////////////
+// ///////////////////// vGMessageBox ///////////////////////////####################
 vGMessageBox::vGMessageBox(QWidget* parent, vGMsgType _type)
 	: QWidget(parent), delay_time_(0), background_(nullptr), title_(nullptr)
 {
@@ -1317,13 +1362,67 @@ void vGMessageBox::box(QWidget* _parent, QString _text, vGMsgType _type, quint16
 	box->show();
 }
 
-///////////////////////// FrPlugin /////////////////////////////////
-/////////// 插件类
+///////////////////////// FrPluginWidget /////////////////////////////###############
+/////////// 插件窗口
 //
+FrPluginWidget::FrPluginWidget(vGMenuBase* _menubase, FrPlugin* _pluginctr):
+	QWidget(_menubase), plugin_(_pluginctr){
+	connect(menu(), &vGMenuBase::update_skin, this, &FrPluginWidget::UpdateSkins);
+	vgTrace("FrPluginWidget ('{}') constructed", QSTD(plugin().name()));
+}
+FrPluginWidget::~FrPluginWidget(){
+	vgTrace("FrPluginWidget ('{}') destructed", QSTD(plugin().name()));
+}
+FrPlugin& FrPluginWidget::plugin() const{
+	if (plugin_) {
+		return *plugin_;
+	}
+	//除非FrPlugin在初始化给了nullptr，否则不会错误
+	vGlog->error("The FrPlugin address is null,is not normally!");
+	throw FrError(FrErrorStatue::Nullptr, "The FrPlugin address is null,is not normally!");
+}
+void FrPluginWidget::UpdateSkins() {
+	vgTrace("FrPluginWidget: {}'s widget 'UpdateSkins' event.", QSTD(plugin().name()));
+}
+void FrPluginWidget::WhenHide(){
+	//打印日志输出
+	vgTrace("FrPluginWidget: {}'s widget 'WhenHide' event.", QSTD(plugin().name()));
+}
+
+QPointer<vGMenuBase> FrPluginWidget::menu() const
+{
+	return QPointer<vGMenuBase>(reinterpret_cast<vGMenuBase*>(parent()));
+}
+
+void FrPluginWidget::hideEvent(QHideEvent* _event){
+	emit widget_hide();
+	QWidget::hideEvent(_event);
+}
+void FrPluginWidget::showEvent(QShowEvent* _event){
+	emit widget_show();
+	QWidget::showEvent(_event);
+}
+
+
+// ///////////////////////////  FrPlugin  ///////////////////###########################
+//////////////// 插件类
+///////////
 
 FrPlugin::FrPlugin(){
 }
+FrPlugin::FrPlugin(FrPlugin&& _f):
+	package_(std::move(_f.package_)),
+	version_(std::move(_f.version_)),
+	path_(std::move(_f.path_)),
+	name_(std::move(_f.name_)),
+	description_(std::move(_f.description_)),
+	logo_(std::move(_f.logo_)),
+	widget_(std::move(_f.widget_)){
+}
 
+FrPlugin::~FrPlugin() {
+	release();
+}
 void FrPlugin::initialize() {
 	package_ = "app.unknow.com";
 	version_ = "0.0.1";
@@ -1331,7 +1430,24 @@ void FrPlugin::initialize() {
 
 void FrPlugin::release(){}
 
+bool FrPlugin::service(){
+	return true;
+}
 
+QPointer<FrPluginWidget> FrPlugin::widget()const
+{
+	return widget_;
+}
+
+void FrPlugin::destory() {
+	if (!widget_.isNull()) {
+		//删除
+		widget_->deleteLater();
+	}
+}
+void FrPlugin::create() {
+	widget_ = new FrPluginWidget(vGp->menu(), this);
+}
 // //////////////////// Other Function //////////////////////////
 
 QPixmap Svg2Pixmap(QByteArray _xml, QSize _size)

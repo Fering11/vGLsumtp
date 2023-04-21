@@ -15,7 +15,7 @@ class VGCORE_EXPORT vGMenuBase;
 class VGCORE_EXPORT vGMessageBox;
 
 class VGCORE_EXPORT FrPlugin;
-class VGCORE_EXPORT FrPluginApp;
+class VGCORE_EXPORT FrPluginWidget;
 
 class vGImageLabel :public QLabel {
 
@@ -34,6 +34,8 @@ private:
 
 //主控制的基类
 //已经包含了UI，动画
+//该实例窗口不会被隐藏，所有窗口都基于这个类
+//窗口的切换也只是之类窗口的隐藏和显示
 class vGMenuBase :public QWidget {
 	Q_OBJECT
 	Q_PROPERTY(qreal allOpacity READ allOpacity WRITE setAllOpacity)
@@ -110,12 +112,13 @@ protected:
 	
 	//设置动画组
 	void setParallel(QAbstractAnimation* _p);
-	std::shared_mutex mt_uia;
 	QPointer<vGAppWidBase> front_;//前台窗口
 	//DEL_ME
 	QPointer<QLayout> background_;//后面背景
 	//活动的插件
+	//TODO 删除
 	std::set<vGPlugin*> ui_ac_;
+	std::shared_mutex mt_uia;
 
 	void __initialize_ui();
 	//之类要重新实现就直接覆盖override
@@ -154,7 +157,7 @@ struct vGPluginInfo{
 };
 
 //x所有App的基类,注意，当调用close的时候，会自动回收内存，不是hide
-
+//!后面删除
 //所有插件基类，
 class vGAppWidBase :public QWidget {
 	Q_OBJECT
@@ -175,7 +178,7 @@ public:
 signals:
 	//关闭程序时
 	void CloseApp(vGAppWidBase* _app);
-	//更新皮肤样式(包括logo)
+	//更新皮肤样式(包括logo)的信号
 	void update_skin();
 public slots:
 	virtual void UpdateSkin();
@@ -187,6 +190,8 @@ protected:
 	vGPlugin* plugin_;
 	friend class vGPlugin;
 };
+//TODO 删除这个
+//本程序用异常驱动，不适合用错误代码
 enum vGAppAttribute
 {
 	//xIntoApp = 0x1, //进入app(反例:发生致命错误)
@@ -289,8 +294,14 @@ public:
 	std::shared_ptr<vGAppInfomation> _getInfo();
 	std::shared_ptr<vGAppInfomation> _getRestartInfo();
 	std::shared_ptr<spdlog::logger> _getLogger();
-
+	//用于修改的互斥锁
+	//影响成员有 fplugins_
 	std::shared_mutex mt_plugin; //plugins_  activities_
+	//只有初始化菜单之后才设置
+	QPointer<vGMenuBase> menu() const{ return menu_; }
+	//修改主菜单地址,提供接口给vGMainMenu自己设置
+	//不要输入空地址
+	void setMenu(QPointer<vGMenuBase> _point);
 protected:
 	//打开日志文件，自定义文件无法开打则使用默认文件
 	//默认文件都打不开则重启
@@ -309,32 +320,42 @@ private:
 	value_type plugins_; //插件
 	std::set<vGPlugin*> activities_;//活动的插件（创建了对象,来源于plugins_）
 
-	std::vector<FrPlugin> fplugins_;
+	std::vector<std::shared_ptr<FrPlugin>> fplugins_;
+	//指向主菜单
+	QPointer<vGMenuBase> menu_;
 	std::shared_ptr<vGConfig> config_;
 	std::shared_ptr<vGAppInfomation> info_;
 	std::shared_ptr<spdlog::logger> log_;
 };
 
-
 //每个插件都有这个基础对象
+//!注意这个的生命周期长于vGApp
 class FrPlugin {
 public:
 	FrPlugin();
 	FrPlugin(const FrPlugin&) = delete;
+	FrPlugin(FrPlugin&& _l);
+	~FrPlugin();
 	//初始化插件
 	virtual void initialize();
 	//释放插件资源
+	//!整个插件废弃，和析构一样
 	virtual void release();
+	virtual void destory();
 	QByteArray package()const { return package_; }
 	QByteArray version() const { return version_; }
 	QString path()const { return path_; }
 	QString name()const { return name_; }
 	QString description() const { return description_; }
 	QPixmap logo()const { return logo_; }
+	//是否注册为服务
+	//服务插件即是无互动窗口，不会在主界面显示插件名称
+	virtual bool service(); 
 	//创建对象，失败抛异常
-	//TODO 完善代码
-	void create();
-	FrPluginApp widget();
+	//子类创建FrPluginWidget需要FrPlugin和vGMenuBase对象，
+	//!确保显示主菜单之后再来调用create函数，否则menu()为空
+	virtual void create();
+	QPointer<FrPluginWidget> widget()const;
 protected:
 	QByteArray package_;//包名，格式 app.***.com
 	QByteArray version_;//版本，e.g. 1.0.1
@@ -351,10 +372,45 @@ protected:
 	QPixmap logo_;
 	//app对象，在调用create函数时会被创建   ==> 窗口后台
 	//destory会销毁该对象,释放相对应资源 ==> 应用后台
-	QPointer<FrPluginApp> widget_;
+	//服务可以不需要这个成员，也可以存在，作为后台设置
+	QPointer<FrPluginWidget> widget_;
+	friend class FrPluginWidget;
+	friend class vGApp; //主要是提供接口修改路径
 };
-class FrPluginApp {
+//窗口基础类，这里主要隐藏信号槽连接
+// 1. 被通知隐藏窗口时，即失去对焦
+// 2. 更新皮肤样式时
+class FrPluginWidget:public QWidget {
+	Q_OBJECT;
+public:
+	FrPluginWidget(vGMenuBase* _menubase, FrPlugin* _pluginctr);
+	~FrPluginWidget();
+	//获取该App的插件类
+	FrPlugin& plugin()const;
+public slots:
+	//更新皮肤
+	virtual void UpdateSkins();
+	//当隐藏时
+	virtual void WhenHide();
+signals:
+	//窗口显示信号
+	void widget_show();
+	//窗口隐藏信号
+	void widget_hide();
+	//关闭信号有析构函数，就不添加
+protected:
+	//获取菜单父类
+	QPointer<vGMenuBase> menu()const;
 
+	//触发信号消息
+	virtual void hideEvent(QHideEvent* _event);
+	virtual void showEvent(QShowEvent* _event);
+	//给更新皮肤提供接口
+	QPixmap& logo() { return plugin().logo_; }
+private:
+	//不给weak_ptr 一是因为难处理，FrPlugin里面要create不好弄
+	//二是能确保FrPlugin生命周期  > FrPluginWidget 的生命周期
+	FrPlugin* plugin_;
 };
 
 //输入svg图片，转换颜色为默认颜色(path,fill属性)
@@ -560,6 +616,10 @@ private:
 #define vGp              (static_cast<vGApp*>(QCoreApplication::instance()))
 #define vGlog            (vGp->_getLogger())
 #define vgDebug          (vGlog->debug)
+//info才能输出信息
+#define vgTrace			 (vGlog->info)
+
+
 #define DebugBox(title,msg)   (QMessageBox::information(nullptr,title,msg))
 //配置文件默认位置  
 //TODO:之后更换为二进制.dat

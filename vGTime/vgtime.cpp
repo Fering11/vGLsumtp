@@ -101,6 +101,55 @@ void FrTime::initialize(){
     logo_ = Svg2Pixmap(vGTime::GetSvg(), vGp->Config().base().win_size());
 }
 
-void FrTime::release(){
+void FrTime::create()
+{
+    widget_ = new FrGTime(vGp->menu(), this);
+}
 
+FrGTime::FrGTime(vGMenuBase* _parent, FrPlugin* _p):
+    Parent(_parent,_p){
+    ui->setupUi(this);
+
+    this->setObjectName("FrTime");
+
+    //启动计时器
+    timer_id_ = startTimer(500);
+    update_time();
+    vgTrace("{} constructed", __FUNCTION__);
+}
+
+FrGTime::~FrGTime(){
+    vgTrace("{} destructed", __FUNCTION__);
+    delete ui;
+}
+
+void FrGTime::update_size(QSize _size){
+    QFont font;
+    font.setPointSize(_size.width() / 6);
+    ui->lab_time->setFont(font);
+    font.setPointSize(_size.width() / 8);
+    ui->lab_date->setFont(font);
+}
+
+void FrGTime::UpdateSkins(){
+    logo() = Svg2Pixmap(vGTime::GetSvg(), vGp->Config().base().win_size());
+    Parent::UpdateSkins();
+}
+void FrGTime::timerEvent(QTimerEvent* _event)
+{
+    if (_event->timerId() == timer_id_) {
+        update_time();
+    }
+    else {
+        Parent::timerEvent(_event);
+    }
+}
+void FrGTime::resizeEvent(QResizeEvent* event)
+{
+    update_size(event->size());
+}
+void FrGTime::update_time() {
+    auto dt = QDateTime::currentDateTime();
+    ui->lab_time->setText(dt.toString("hh:mm:ss"));
+    ui->lab_date->setText(dt.toString("yyyy/MM/dd"));
 }

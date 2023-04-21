@@ -62,15 +62,15 @@ int startup(int argc, char* argv[])
 		main_window.show();
 		exit_code = app.exec();
 	}
-	catch (const vGError& _err) {
+	catch (const FrError& _err) {
 		//异常在这被捕捉是不可逆回的错误
 		//TODO 进行更友好的提示(或者不提示，进行重启，设置信息)
 		QString why = QString::fromUtf8("Code:%1\r\nMsg:%2\r\n Program will restart...").
-			arg(QN2S(_err.code()), QString::fromStdString(_err.what()));
+			arg(QN2S(static_cast<int>(_err.code())), QString::fromStdString(_err.what()));
 		QMessageBox::information(nullptr, QU8("异常"), why);
 		if (vgArgument->attribute_ & Restart) {
 			exit_code = _APP_RESTART;//重启
-		} else exit_code = _err.code();
+		} else exit_code = static_cast<int>(_err.code());
 	}
 	catch (const std::exception& _err) {
 		QMessageBox::information(nullptr, QString::fromUtf8("异常"), QString::fromUtf8("未知异常:%1").arg(QString::fromUtf8(_err.what())));

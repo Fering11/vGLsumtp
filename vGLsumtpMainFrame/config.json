@@ -4,7 +4,7 @@
       "easing_curve": 27,
       "log_file_count": 0,
       "log_file_size": 102400,
-      "log_level": 3,
+      "log_level": 1,
       "log_path": "./log",
       "plugins": "./plugins",
       "screen_height": 600,
