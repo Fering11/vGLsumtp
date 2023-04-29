@@ -5,14 +5,16 @@ vGMainMenu::vGMainMenu(QLayout* _back, QWidget* parent) :
 {
 	setObjectName("vGMainMenu");
 
-	vIterator it(&vGp->Plugins(), itemPos());
-	left()->setPixmap((*it)->info().logo);
-	center()->setPixmap((*(it + 1))->info().logo);
-	right()->setPixmap((*(it + 2))->info().logo);
-	description()->setText((*(it + 1))->info().description);
+	vIterator it(&vGp->fPlugins(), itemPos());
+	//vIterator it(&vGp->Plugins(), itemPos());
+	left()->setPixmap((*it)->logo());
+	center()->setPixmap((*(it + 1))->logo());
+	right()->setPixmap((*(it + 2))->logo());
+	description()->setText((*(it + 1))->description());
 	//读取配置里的
 	setDuration(vGp->Config().base().duration_time);
 	setEasingCurve(QEasingCurve::Type(vGp->Config().base().easing_curve));
+
 
 	//信号槽触发顺序按照定义的连接顺序
 	emit update_skin();
@@ -73,12 +75,19 @@ void vGMainMenu::ac_turnLeft()
 {
 	add();
 
-	vIterator it(&vGp->Plugins(), itemPos() - 1);
-	item_pos_ = it.pos();
-	left()->setNextPixmap((*it)->info().logo);
-	center()->setNextPixmap((*(it + 1))->info().logo);
-	right()->setNextPixmap((*(it + 2))->info().logo);
-	description()->setText((*(it + 1))->info().description);
+	//vIterator it(&vGp->Plugins(), itemPos() - 1);
+	//item_pos_ = it.pos();
+	//left()->setNextPixmap((*it)->info().logo);
+	//center()->setNextPixmap((*(it + 1))->info().logo);
+	//right()->setNextPixmap((*(it + 2))->info().logo);
+	//description()->setText((*(it + 1))->info().description);
+
+	vIterator it(&vGp->fPlugins(), itemPos()-1);
+	//vIterator it(&vGp->Plugins(), itemPos());
+	left()->setNextPixmap((*it)->logo());
+	center()->setNextPixmap((*(it + 1))->logo());
+	right()->setNextPixmap((*(it + 2))->logo());
+	description()->setText((*(it + 1))->description());
 
 	UpdateLayout(Right);
 }
@@ -86,12 +95,19 @@ void vGMainMenu::ac_turnRight()
 {
 	sub();
 
-	vIterator it(&vGp->Plugins(), itemPos() + 1);
-	item_pos_ = it.pos();
-	left()->setNextPixmap((*it)->info().logo);
-	center()->setNextPixmap((*(it + 1))->info().logo);
-	right()->setNextPixmap((*(it + 2))->info().logo);
-	description()->setText((*(it + 1))->info().description);
+	//vIterator it(&vGp->Plugins(), itemPos() + 1);
+	//item_pos_ = it.pos();
+	//left()->setNextPixmap((*it)->info().logo);
+	//center()->setNextPixmap((*(it + 1))->info().logo);
+	//right()->setNextPixmap((*(it + 2))->info().logo);
+	//description()->setText((*(it + 1))->info().description);
+
+	vIterator it(&vGp->fPlugins(), itemPos()+1);
+	//vIterator it(&vGp->Plugins(), itemPos());
+	left()->setNextPixmap((*it)->logo());
+	center()->setNextPixmap((*(it + 1))->logo());
+	right()->setNextPixmap((*(it + 2))->logo());
+	description()->setText((*(it + 1))->description());
 
 	UpdateLayout(Left);
 }

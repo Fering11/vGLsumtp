@@ -41,7 +41,7 @@ class FrGTime : public FrPluginWidget
     Q_OBJECT
 
 public:
-    explicit FrGTime(vGMenuBase* parent, FrPlugin*);
+    explicit FrGTime(vGMenuBase* parent, FrPluginPr*);
     ~FrGTime();
 
     static QByteArray GetSvg();
@@ -61,7 +61,7 @@ private:
     Ui::vGTime* ui;
 };
 
-class FrTime :public FrPlugin {
+class FrTime :public FrPluginPr {
 public:
     void initialize();
     //详情看父类

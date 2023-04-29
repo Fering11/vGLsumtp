@@ -79,6 +79,10 @@ private:
 	vGC_Base base_;
 	vGC_Server server_;
 };
+
+//异常抛出函数
+VGCORE_EXPORT void FrThrowError(FrErrorStatue _statue, const char* const _msg);
+
 //json结构体转化
 
 //通信 vGC_Server

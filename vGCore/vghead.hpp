@@ -14,9 +14,15 @@ class VGCORE_EXPORT vGApp;
 class VGCORE_EXPORT vGMenuBase;
 class VGCORE_EXPORT vGMessageBox;
 
-class VGCORE_EXPORT FrPlugin;
+class VGCORE_EXPORT FrPluginPr;
 class VGCORE_EXPORT FrPluginWidget;
 
+class FrPlugin;	//插件实例对象
+class FrPluginData;	//插件管理元素
+class FrPluginManager; //插件管理
+class FrPluginApp; //插件窗口
+
+//主要是为了刷新时避免突然变化
 class vGImageLabel :public QLabel {
 
 	Q_OBJECT
@@ -284,6 +290,8 @@ public:
 	//获取插件
 	const value_type& Plugins()const;
 	value_type& Plugins();//注意加锁
+
+	std::vector<std::shared_ptr<FrPluginPr>>& fPlugins();
 	//获取活动插件
 	const std::set<vGPlugin*>& activities()const;
 	std::set<vGPlugin*>& activities();
@@ -319,8 +327,11 @@ private:
 	vGC_Skin skin_;
 	value_type plugins_; //插件
 	std::set<vGPlugin*> activities_;//活动的插件（创建了对象,来源于plugins_）
+	//!fplugins的内存实在插件全局区上，不是堆分配内存
+	std::vector<std::shared_ptr<FrPluginPr>> fplugins_;
 
-	std::vector<std::shared_ptr<FrPlugin>> fplugins_;
+	FrPluginManager* manager_;
+
 	//指向主菜单
 	QPointer<vGMenuBase> menu_;
 	std::shared_ptr<vGConfig> config_;
@@ -329,18 +340,20 @@ private:
 };
 
 //每个插件都有这个基础对象
-//!注意这个的生命周期长于vGApp
-class FrPlugin {
+//!这个的生命周期长于vGApp
+class FrPluginPr {
 public:
-	FrPlugin();
-	FrPlugin(const FrPlugin&) = delete;
-	FrPlugin(FrPlugin&& _l);
-	~FrPlugin();
+	FrPluginPr();
+	FrPluginPr(const FrPluginPr&) = delete;
+	FrPluginPr(FrPluginPr&& _l);
+	~FrPluginPr();
 	//初始化插件
 	virtual void initialize();
 	//释放插件资源
 	//!整个插件废弃，和析构一样
+	//!要准备被重复调用至少2次
 	virtual void release();
+	//销毁窗口
 	virtual void destory();
 	QByteArray package()const { return package_; }
 	QByteArray version() const { return version_; }
@@ -383,10 +396,10 @@ protected:
 class FrPluginWidget:public QWidget {
 	Q_OBJECT;
 public:
-	FrPluginWidget(vGMenuBase* _menubase, FrPlugin* _pluginctr);
+	FrPluginWidget(vGMenuBase* _menubase, FrPluginPr* _pluginctr);
 	~FrPluginWidget();
 	//获取该App的插件类
-	FrPlugin& plugin()const;
+	FrPluginPr& plugin()const;
 public slots:
 	//更新皮肤
 	virtual void UpdateSkins();
@@ -410,7 +423,7 @@ protected:
 private:
 	//不给weak_ptr 一是因为难处理，FrPlugin里面要create不好弄
 	//二是能确保FrPlugin生命周期  > FrPluginWidget 的生命周期
-	FrPlugin* plugin_;
+	FrPluginPr* plugin_;
 };
 
 //输入svg图片，转换颜色为默认颜色(path,fill属性)

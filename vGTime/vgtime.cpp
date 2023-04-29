@@ -4,8 +4,20 @@
 //全局FrTime实例
 FrTime _g_ex_frtime;
 
+void GetProperty(FrPluginProperty* _property){
+    if (_property) {
+        _property->description = "Time Control";
+        _property->name = "Time";
+        _property->package = "www.time.app";
+        _property->version = "0.0.1";
+    }
+    else {
+        vGlog->warn("vGTime GetProperty is not allow nullptr");
+    }
+}
+
 FrPlugin* GetInstance() {
-    return reinterpret_cast<FrPlugin*>(std::addressof(_g_ex_frtime));
+
 }
 
 #define qctr (QCoreApplication::tr)
@@ -106,7 +118,7 @@ void FrTime::create()
     widget_ = new FrGTime(vGp->menu(), this);
 }
 
-FrGTime::FrGTime(vGMenuBase* _parent, FrPlugin* _p):
+FrGTime::FrGTime(vGMenuBase* _parent, FrPluginPr* _p):
     Parent(_parent,_p){
     ui->setupUi(this);
 

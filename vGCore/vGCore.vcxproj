@@ -195,11 +195,13 @@
     </QtRcc>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="FrPlugin.cpp" />
     <ClCompile Include="vGConfig.cpp" />
     <ClCompile Include="vghead.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="define.h" />
+    <QtMoc Include="FrPlugin.hpp" />
     <ClInclude Include="share_head.h" />
     <ClInclude Include="vGConfig.h" />
     <ClInclude Include="vGCore_global.h" />

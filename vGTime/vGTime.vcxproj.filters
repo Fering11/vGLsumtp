@@ -58,6 +58,7 @@
     <None Include="vGTime.pro">
       <Filter>Generated Files</Filter>
     </None>
+    <None Include="cpp.hint" />
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="vGTime.qrc">

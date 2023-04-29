@@ -3,7 +3,7 @@
 * 
 */
 #include "vghead.hpp"
-
+#include "FrPlugin.hpp"
 // ///////////////////全局变量
 std::deque<vGMessageBox*> vGMessageBox::__mb_msg_box_deque; //信息框队列
 std::shared_mutex vGMessageBox::__mb_mt_msg;
@@ -849,6 +849,10 @@ vGApp::value_type& vGApp::Plugins()
 {
 	return plugins_;
 }
+std::vector<std::shared_ptr<FrPluginPr>>& vGApp::fPlugins()
+{
+	return fplugins_;
+}
 const vGC_Skin& vGApp::Skin() const
 {
 	return skin_;
@@ -1002,14 +1006,20 @@ void vGApp::LoadPlugins()
 			}
 		}
 
-		//FrPlugin:
-		using __GetInstance = FrPlugin*(*)();
+		//FrPluginPr:
+		using __GetInstance = FrPluginPr*(*)();
 		auto c1 = file.absoluteFilePath();
 		__GetInstance cGetInstance = (__GetInstance)lib.resolve("GetInstance");
 		if(cGetInstance){
-			FrPlugin* pointer = cGetInstance();
-			if (pointer)
-				fplugins_.push_back(std::shared_ptr<FrPlugin>(pointer));
+			FrPluginPr* pointer = cGetInstance();
+			if (pointer) {
+				//调用插件的release函数
+				auto deleter = [](FrPluginPr* _deleter) {
+					_deleter->release();
+				};
+				fplugins_.push_back(std::shared_ptr<FrPluginPr>(pointer,deleter));
+				fplugins_.back()->initialize();//进行初始化
+			}
 			else
 				vgTrace("Loaded Plugin Faild");
 		}
@@ -1365,7 +1375,7 @@ void vGMessageBox::box(QWidget* _parent, QString _text, vGMsgType _type, quint16
 ///////////////////////// FrPluginWidget /////////////////////////////###############
 /////////// 插件窗口
 //
-FrPluginWidget::FrPluginWidget(vGMenuBase* _menubase, FrPlugin* _pluginctr):
+FrPluginWidget::FrPluginWidget(vGMenuBase* _menubase, FrPluginPr* _pluginctr):
 	QWidget(_menubase), plugin_(_pluginctr){
 	connect(menu(), &vGMenuBase::update_skin, this, &FrPluginWidget::UpdateSkins);
 	vgTrace("FrPluginWidget ('{}') constructed", QSTD(plugin().name()));
@@ -1373,13 +1383,13 @@ FrPluginWidget::FrPluginWidget(vGMenuBase* _menubase, FrPlugin* _pluginctr):
 FrPluginWidget::~FrPluginWidget(){
 	vgTrace("FrPluginWidget ('{}') destructed", QSTD(plugin().name()));
 }
-FrPlugin& FrPluginWidget::plugin() const{
+FrPluginPr& FrPluginWidget::plugin() const{
 	if (plugin_) {
 		return *plugin_;
 	}
 	//除非FrPlugin在初始化给了nullptr，否则不会错误
-	vGlog->error("The FrPlugin address is null,is not normally!");
-	throw FrError(FrErrorStatue::Nullptr, "The FrPlugin address is null,is not normally!");
+	vGlog->error("The FrPluginPr address is null,is not normally!");
+	throw FrError(FrErrorStatue::Nullptr, "The FrPluginPr address is null,is not normally!");
 }
 void FrPluginWidget::UpdateSkins() {
 	vgTrace("FrPluginWidget: {}'s widget 'UpdateSkins' event.", QSTD(plugin().name()));
@@ -1404,13 +1414,13 @@ void FrPluginWidget::showEvent(QShowEvent* _event){
 }
 
 
-// ///////////////////////////  FrPlugin  ///////////////////###########################
+// ///////////////////////////  FrPluginPr  ///////////////////###########################
 //////////////// 插件类
 ///////////
 
-FrPlugin::FrPlugin(){
+FrPluginPr::FrPluginPr(){
 }
-FrPlugin::FrPlugin(FrPlugin&& _f):
+FrPluginPr::FrPluginPr(FrPluginPr&& _f):
 	package_(std::move(_f.package_)),
 	version_(std::move(_f.version_)),
 	path_(std::move(_f.path_)),
@@ -1420,32 +1430,38 @@ FrPlugin::FrPlugin(FrPlugin&& _f):
 	widget_(std::move(_f.widget_)){
 }
 
-FrPlugin::~FrPlugin() {
+FrPluginPr::~FrPluginPr() {
 	release();
 }
-void FrPlugin::initialize() {
+void FrPluginPr::initialize() {
 	package_ = "app.unknow.com";
 	version_ = "0.0.1";
 }
+/*
+* 该函数有可能会被重复调用
+* 1. 在插件的全局变量中被析构
+* 2.在vGApp::~vGApp的shared_ptr中被release
+*/
+void FrPluginPr::release(){
+	destory();
+}
 
-void FrPlugin::release(){}
-
-bool FrPlugin::service(){
+bool FrPluginPr::service(){
 	return true;
 }
 
-QPointer<FrPluginWidget> FrPlugin::widget()const
+QPointer<FrPluginWidget> FrPluginPr::widget()const
 {
 	return widget_;
 }
 
-void FrPlugin::destory() {
+void FrPluginPr::destory() {
 	if (!widget_.isNull()) {
 		//删除
 		widget_->deleteLater();
 	}
 }
-void FrPlugin::create() {
+void FrPluginPr::create() {
 	widget_ = new FrPluginWidget(vGp->menu(), this);
 }
 // //////////////////// Other Function //////////////////////////

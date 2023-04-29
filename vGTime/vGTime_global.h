@@ -3,6 +3,7 @@
 
 #include <QtCore/qglobal.h>
 #include "vghead.hpp"
+#include "FrPlugin.hpp"
 #if defined(VGTIME_LIBRARY)
 #  define VGTIME_EXPORT Q_DECL_EXPORT
 #else
@@ -13,7 +14,9 @@ extern "C" {
 	VGTIME_EXPORT void destory_object(vGAppWidBase* _parent);
 	VGTIME_EXPORT void get_info(vGPluginInfo* _info);
 
-	//获取全局实例
+	//获取插件信息
+	VGTIME_EXPORT void GetProperty(FrPluginProperty* _property);
+	//返回new的对象,销毁通过deleteLater实现
 	VGTIME_EXPORT FrPlugin* GetInstance();
 }
 #endif // VGTIME_GLOBAL_H

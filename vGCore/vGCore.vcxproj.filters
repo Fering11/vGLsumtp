@@ -43,6 +43,9 @@
     <ClCompile Include="vghead.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="FrPlugin.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="define.h">
@@ -77,5 +80,10 @@
     <None Include="vGCore.pro">
       <Filter>Generated Files</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="FrPlugin.hpp">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
 </Project>

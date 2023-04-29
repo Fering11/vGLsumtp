@@ -1,4 +1,9 @@
 #include "vGConfig.h"
+
+void FrThrowError(FrErrorStatue _statue, const char* const _msg){
+	throw FrError(_statue, _msg);
+}
+
 // ////////vGC_Base
 void to_json(nlohmann::json& _json, const vGC_Base& _data)
 {
@@ -73,6 +78,7 @@ void from_json(const nlohmann::json& _json, vGC_Skin_Menu& _data) {
 	_data.background = __JsonDRT(_json, "background");
 	_data.logo = __JsonDRT(_json, "logo");
 }
+
 
 // /////////vGC_Server
 void to_json(nlohmann::json& _json, const vGC_Server& _data)

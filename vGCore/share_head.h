@@ -99,4 +99,5 @@ private:
 	char* msg_;
 	FrErrorStatue statue_;
 };
+
 #endif
