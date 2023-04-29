@@ -39,6 +39,7 @@
 #include <QApplication>
 #include <QSvgrenderer>
 #include <QDomDocument>
+#include <QReadWriteLock>
 #include <QTemporaryFile>
 #include <QCommandLineParser>
 #include <QCommandLineOption>
