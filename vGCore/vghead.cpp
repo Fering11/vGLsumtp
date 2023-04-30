@@ -771,6 +771,7 @@ vGApp::vGApp(int argc, char* argv[], std::shared_ptr<vGAppInfomation> _argu) :
 		//TODO 让守护进程检视
 		//已经设置至多重启5次
 	}
+	manager_ = new FrPluginManager();
 	//日志文件检查由setLogger执行，错误会抛出异常
 }
 
@@ -1027,6 +1028,8 @@ void vGApp::LoadPlugins()
 		lib.unload();
 	}
 	plugins_.shrink_to_fit();
+	//new
+	manager_->load(dir.path());
 }
 
 void vGApp::LoadSkin()

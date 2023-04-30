@@ -209,6 +209,7 @@
     </QtMoc>
   </ItemGroup>
   <ItemGroup>
+    <None Include="cpp.hint" />
     <None Include="Resource\Application.svg" />
     <None Include="Resource\dark.json" />
     <None Include="Resource\default_config.json" />

@@ -4,16 +4,18 @@
 //全局FrTime实例
 FrTime _g_ex_frtime;
 
-void GetProperty(FrPluginProperty* _property){
+bool GetProperty(FrPluginProperty* _property){
     if (_property) {
         _property->description = "Time Control";
         _property->name = "Time";
         _property->package = "www.time.app";
         _property->version = "0.0.1";
+        return true;
     }
     else {
         vGlog->warn("vGTime GetProperty is not allow nullptr");
     }
+    return false;
 }
 
 FrPlugin* GetInstance() {

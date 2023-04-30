@@ -7,6 +7,8 @@
 #define FP_PLUGIN_HEAD
 #include "vGConfig.h"
 
+class vGMenuBase;
+
 class VGCORE_EXPORT FrPlugin;	//插件实例对象
 class VGCORE_EXPORT FrPluginData;	//插件管理元素
 class VGCORE_EXPORT FrPluginManager; //插件管理
@@ -29,28 +31,49 @@ public:
 	//!加载指定的插件
 	//插件加载失败返回false
 	bool loadPlugin(QString _directory)TH_SAFETY;
+	//STL vector::at返回函数
+	FrPluginData& at(size_t pos)TH_SAFETY;
+	//删除插件,_pos指定位置，错误抛出std异常
+	//插件必须没有运行
+	bool remove(size_t _pos)TH_SAFETY;
+	//返回插件指针
+	std::vector<FrPluginData*> plugins()TH_SAFETY;
 private:
+	bool __remove(std::vector<FrPluginData>::iterator _it);
 	QReadWriteLock lock_;
 	std::vector<FrPluginData> data_;
 };
 //在主线程，代表一个插件动态库对象
 class FrPluginData {
 public:
-	using fget_property_type = void(*)(FrPluginProperty*);
-	using fget_instance_type = FrPlugin(*)();
+	using fget_property_type = bool(*)(FrPluginProperty*);
+	using fget_instance_type = FrPlugin*(*)();
 
 	FrPluginData(FrPluginData&& _object)noexcept;
 	//根据path加载插件
 	//错误抛异常
-	FrPluginData(QDir _path)TH_SAFETY; 
+	FrPluginData(QDir _path)TH_SAFETY;
+	~FrPluginData()TH_SAFETY;
 	//如果插件对象无效，则返回true
 	//插件对象有效不代表object对象存在
 	bool isInvalid()const;
 	//重新获取插件属性
 	void updateProperty()TH_SAFETY;
 	//获取插件
+	//!如果object_对象为空，则会创建对象
+	//插件对象不正确或者无法分配地址时(失败)返回nullptr
+	//TODO 这里没有开启线程，后续根据项目修改
+	QPointer<FrPlugin> plugin()TH_SAFETY;
 	QPointer<FrPlugin> plugin()const;
+	//获取插件的属性
 	FrPluginProperty property()const;
+	//释放该插件对象，终止APP运行
+	// overtime 超时时间，force是否强制(必须先获取锁)
+	//如果程序在运行，则会QThread::exit退出
+	//!超过overtime并且force为真，则会调用thread的terminial
+	bool release(const int overtime = -1,bool force = false)TH_SAFETY;
+	//返回当前的线程对象，如果为空则说明线程没有开始运行
+	QThread* thread();
 private:
 	void _load(QDir _path)TH_SAFETY;
 	bool _is_invalid()const;
@@ -58,6 +81,7 @@ private:
 	QReadWriteLock lock_;
 	fget_property_type f_get_property;
 	fget_instance_type f_get_instance;
+	QThread* plugin_thread_; //插件所在的线程
 	QPointer<FrPlugin> object_;
 	FrPluginProperty property_;
 };
@@ -66,15 +90,23 @@ private:
 class FrPlugin :public QObject {
 	Q_OBJECT
 public:
+	//插件初始化不代表立马初始化窗口对象
 	FrPlugin();
-
+	~FrPlugin();
+	//初始化插件对象
+	virtual bool initialize();
+	//获取窗口对象
+	QPointer<FrPluginApp> widget();
 private:
-	QPointer<FrPluginApp> widget_;
+	FrPluginApp* widget_;
 };
 
 class FrPluginApp:public QWidget {
+public:
+	FrPluginApp(vGMenuBase* _menu, FrPlugin* _plugin);
+private:
 
-
+	QPointer<FrPlugin> plugin_;
 };
 
 

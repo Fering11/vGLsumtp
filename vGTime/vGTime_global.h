@@ -15,8 +15,10 @@ extern "C" {
 	VGTIME_EXPORT void get_info(vGPluginInfo* _info);
 
 	//获取插件信息
-	VGTIME_EXPORT void GetProperty(FrPluginProperty* _property);
+	//确保无异常
+	VGTIME_EXPORT bool GetProperty(FrPluginProperty* _property);
 	//返回new的对象,销毁通过deleteLater实现
+	//确保无异常
 	VGTIME_EXPORT FrPlugin* GetInstance();
 }
 #endif // VGTIME_GLOBAL_H
