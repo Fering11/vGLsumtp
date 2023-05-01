@@ -2,7 +2,8 @@
 #define VGSETTING_H
 
 #include "vGSetting_global.h"
-
+#include "vghead.hpp"
+#include "FrPlugin.hpp"
 namespace Ui {
 class vGSetting;
 }
@@ -21,4 +22,21 @@ private:
     Ui::vGSetting *ui;
 };
 //:/core/icon
+
+class FrSettingApp :public FrPlugin {
+    Q_OBJECT
+public:
+    FrSettingApp();
+    ~FrSettingApp();
+    bool initialize();
+    bool event(QEvent* _e);
+
+};
+class FrSettingWidget :public FrPluginWidget {
+    Q_OBJECT
+public:
+    FrSettingWidget(vGMenuBase* _menu, FrPlugin* _plugin);
+};
+
+
 #endif // VGSETTING_H

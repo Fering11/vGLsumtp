@@ -1,16 +1,28 @@
 #include "vgmainmenu.h"
 #include "vghead.hpp"
+#include "FrPlugin.hpp"
+//#define TEST_VG 
 vGMainMenu::vGMainMenu(QLayout* _back, QWidget* parent) :
 	vGMenuBase(parent, _back), item_pos_(0), private_(new vGMainMenu_Private(this))
 {
 	setObjectName("vGMainMenu");
+#ifdef TEST_VG
 
-	vIterator it(&vGp->fPlugins(), itemPos());
-	//vIterator it(&vGp->Plugins(), itemPos());
-	left()->setPixmap((*it)->logo());
-	center()->setPixmap((*(it + 1))->logo());
-	right()->setPixmap((*(it + 2))->logo());
-	description()->setText((*(it + 1))->description());
+	//vIterator it(&vGp->fPlugins(), itemPos());
+	vIterator it(&vGp->Plugins(), itemPos());
+	left()->setPixmap((*it)->info().logo);
+	center()->setPixmap((*(it + 1))->info().logo);
+	right()->setPixmap((*(it + 2))->info().logo);
+	description()->setText((*(it + 1))->info().description);
+#else
+	//new version
+	auto plugin = vGp->pluginManager()->plugins();
+	vIterator its(&plugin, itemPos());
+	left()->setPixmap((*its)->property().logo);
+	center()->setPixmap((*(its + 1))->property().logo);
+	right()->setPixmap((*(its + 2))->property().logo);
+	description()->setText((*(its + 1))->property().description);
+#endif
 	//读取配置里的
 	setDuration(vGp->Config().base().duration_time);
 	setEasingCurve(QEasingCurve::Type(vGp->Config().base().easing_curve));
@@ -70,45 +82,49 @@ void vGMainMenu::UpdateLayout(Action _action, QSize _new_size)
 		break;
 	}
 	vGMenuBase::UpdateLayout(_action, _new_size);
+	//new
+	this->setStyleSheet(QU8("vGImageLabel#%2{border-color:%1;border-style:solid;border-width:1px;}").
+		arg(vGp->Skin().menu.background.name(), center()->objectName()));
 }
 void vGMainMenu::ac_turnLeft()
 {
 	add();
-
-	//vIterator it(&vGp->Plugins(), itemPos() - 1);
-	//item_pos_ = it.pos();
-	//left()->setNextPixmap((*it)->info().logo);
-	//center()->setNextPixmap((*(it + 1))->info().logo);
-	//right()->setNextPixmap((*(it + 2))->info().logo);
-	//description()->setText((*(it + 1))->info().description);
-
-	vIterator it(&vGp->fPlugins(), itemPos()-1);
-	//vIterator it(&vGp->Plugins(), itemPos());
-	left()->setNextPixmap((*it)->logo());
-	center()->setNextPixmap((*(it + 1))->logo());
-	right()->setNextPixmap((*(it + 2))->logo());
-	description()->setText((*(it + 1))->description());
-
+#ifdef TEST_VG
+	vIterator it(&vGp->Plugins(), itemPos() - 1);
+	item_pos_ = it.pos();
+	left()->setNextPixmap((*it)->info().logo);
+	center()->setNextPixmap((*(it + 1))->info().logo);
+	right()->setNextPixmap((*(it + 2))->info().logo);
+	description()->setText((*(it + 1))->info().description);
+#else
+	auto plugin = vGp->pluginManager()->plugins();
+	vIterator its(&plugin, itemPos()-1);
+	left()->setNextPixmap((*its)->property().logo);
+	center()->setNextPixmap((*(its + 1))->property().logo);
+	right()->setNextPixmap((*(its + 2))->property().logo);
+	description()->setText((*(its + 1))->property().description);
+#endif
 	UpdateLayout(Right);
 }
 void vGMainMenu::ac_turnRight()
 {
 	sub();
+#ifdef TEST_VG
+	vIterator it(&vGp->Plugins(), itemPos() + 1);
+	item_pos_ = it.pos();
+	left()->setNextPixmap((*it)->info().logo);
+	center()->setNextPixmap((*(it + 1))->info().logo);
+	right()->setNextPixmap((*(it + 2))->info().logo);
+	description()->setText((*(it + 1))->info().description);
+#else
+	auto plugin = vGp->pluginManager()->plugins();
+	vIterator its(&plugin, itemPos()+1);
+	left()->setNextPixmap((*its)->property().logo);
+	center()->setNextPixmap((*(its + 1))->property().logo);
+	right()->setNextPixmap((*(its + 2))->property().logo);
+	description()->setText((*(its + 1))->property().description);
 
-	//vIterator it(&vGp->Plugins(), itemPos() + 1);
-	//item_pos_ = it.pos();
-	//left()->setNextPixmap((*it)->info().logo);
-	//center()->setNextPixmap((*(it + 1))->info().logo);
-	//right()->setNextPixmap((*(it + 2))->info().logo);
-	//description()->setText((*(it + 1))->info().description);
-
-	vIterator it(&vGp->fPlugins(), itemPos()+1);
-	//vIterator it(&vGp->Plugins(), itemPos());
-	left()->setNextPixmap((*it)->logo());
-	center()->setNextPixmap((*(it + 1))->logo());
-	right()->setNextPixmap((*(it + 2))->logo());
-	description()->setText((*(it + 1))->description());
-
+#endif
 	UpdateLayout(Left);
 }
 void vGMainMenu::ac_enter()
@@ -143,11 +159,17 @@ void vGMainMenu::keyPressEvent(QKeyEvent* _event){
 	}
 	case Qt::Key_Return:
 	case Qt::Key_Enter: {
-		ac_enter();
+		vGlog->info("vGMainMenu::keyPressEvent,pos:{}",itemPos());
+		auto& pluginApp = vGp->pluginManager()->at(itemPos());
+		pluginApp.start();
+		pluginApp.plugin()->widget()->show();
+		//pluginApp
+		//pluginApp->widget()->show();
+		//ac_enter();
 		break;
 	}
 	case Qt::Key_Escape: {
-		ReleaseWindow(front_);
+		//ReleaseWindow(front_);
 		break;
 	}
 	default:

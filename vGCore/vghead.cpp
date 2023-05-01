@@ -827,6 +827,9 @@ vGApp::~vGApp()
 	if (config_) { //如果是错误退出的话,config_为空
 		config_reader::save_config(config_);
 	}
+	if (manager_) {
+		delete manager_;
+	}
 }
 bool vGApp::notify(QObject* _receiver, QEvent* _event) {
 	return QApplication::notify(_receiver, _event);
@@ -896,6 +899,10 @@ void vGApp::setMenu(QPointer<vGMenuBase> _point){
 
 	}
 	menu_ = _point;
+}
+
+FrPluginManager* vGApp::pluginManager(){
+	return manager_;
 }
 
 void vGApp::setLogger()
@@ -1375,18 +1382,18 @@ void vGMessageBox::box(QWidget* _parent, QString _text, vGMsgType _type, quint16
 	box->show();
 }
 
-///////////////////////// FrPluginWidget /////////////////////////////###############
+///////////////////////// FrPluginWidgetPr /////////////////////////////###############
 /////////// 插件窗口
 //
-FrPluginWidget::FrPluginWidget(vGMenuBase* _menubase, FrPluginPr* _pluginctr):
+FrPluginWidgetPr::FrPluginWidgetPr(vGMenuBase* _menubase, FrPluginPr* _pluginctr):
 	QWidget(_menubase), plugin_(_pluginctr){
-	connect(menu(), &vGMenuBase::update_skin, this, &FrPluginWidget::UpdateSkins);
-	vgTrace("FrPluginWidget ('{}') constructed", QSTD(plugin().name()));
+	connect(menu(), &vGMenuBase::update_skin, this, &FrPluginWidgetPr::UpdateSkins);
+	vgTrace("FrPluginWidgetPr ('{}') constructed", QSTD(plugin().name()));
 }
-FrPluginWidget::~FrPluginWidget(){
-	vgTrace("FrPluginWidget ('{}') destructed", QSTD(plugin().name()));
+FrPluginWidgetPr::~FrPluginWidgetPr(){
+	vgTrace("FrPluginWidgetPr ('{}') destructed", QSTD(plugin().name()));
 }
-FrPluginPr& FrPluginWidget::plugin() const{
+FrPluginPr& FrPluginWidgetPr::plugin() const{
 	if (plugin_) {
 		return *plugin_;
 	}
@@ -1394,24 +1401,24 @@ FrPluginPr& FrPluginWidget::plugin() const{
 	vGlog->error("The FrPluginPr address is null,is not normally!");
 	throw FrError(FrErrorStatue::Nullptr, "The FrPluginPr address is null,is not normally!");
 }
-void FrPluginWidget::UpdateSkins() {
-	vgTrace("FrPluginWidget: {}'s widget 'UpdateSkins' event.", QSTD(plugin().name()));
+void FrPluginWidgetPr::UpdateSkins() {
+	vgTrace("FrPluginWidgetPr: {}'s widget 'UpdateSkins' event.", QSTD(plugin().name()));
 }
-void FrPluginWidget::WhenHide(){
+void FrPluginWidgetPr::WhenHide(){
 	//打印日志输出
-	vgTrace("FrPluginWidget: {}'s widget 'WhenHide' event.", QSTD(plugin().name()));
+	vgTrace("FrPluginWidgetPr: {}'s widget 'WhenHide' event.", QSTD(plugin().name()));
 }
 
-QPointer<vGMenuBase> FrPluginWidget::menu() const
+QPointer<vGMenuBase> FrPluginWidgetPr::menu() const
 {
 	return QPointer<vGMenuBase>(reinterpret_cast<vGMenuBase*>(parent()));
 }
 
-void FrPluginWidget::hideEvent(QHideEvent* _event){
+void FrPluginWidgetPr::hideEvent(QHideEvent* _event){
 	emit widget_hide();
 	QWidget::hideEvent(_event);
 }
-void FrPluginWidget::showEvent(QShowEvent* _event){
+void FrPluginWidgetPr::showEvent(QShowEvent* _event){
 	emit widget_show();
 	QWidget::showEvent(_event);
 }
@@ -1453,7 +1460,7 @@ bool FrPluginPr::service(){
 	return true;
 }
 
-QPointer<FrPluginWidget> FrPluginPr::widget()const
+QPointer<FrPluginWidgetPr> FrPluginPr::widget()const
 {
 	return widget_;
 }
@@ -1465,7 +1472,7 @@ void FrPluginPr::destory() {
 	}
 }
 void FrPluginPr::create() {
-	widget_ = new FrPluginWidget(vGp->menu(), this);
+	widget_ = new FrPluginWidgetPr(vGp->menu(), this);
 }
 // //////////////////// Other Function //////////////////////////
 

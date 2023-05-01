@@ -35,9 +35,9 @@ private:
     Ui::vGTime *ui;
 };
 
-class FrGTime : public FrPluginWidget
+class FrGTime : public FrPluginWidgetPr
 {
-    using Parent = FrPluginWidget;
+    using Parent = FrPluginWidgetPr;
     Q_OBJECT
 
 public:
@@ -66,8 +66,23 @@ public:
     void initialize();
     //详情看父类
     void create();
-    bool service() { return false; }
 
 };
+
+class FrTimeApp :public FrPlugin {
+    Q_OBJECT
+public:
+    FrTimeApp();
+    ~FrTimeApp();
+    bool initialize();
+    bool event(QEvent* _e);
+    
+};
+class FrTimeWidget :public FrPluginWidget {
+    Q_OBJECT
+public:
+    FrTimeWidget(vGMenuBase* _menu, FrPlugin* _plugin);
+};
+
 
 #endif // VGTIME_H

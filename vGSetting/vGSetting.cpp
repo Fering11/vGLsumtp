@@ -1,6 +1,29 @@
 #include "vGSetting.h"
 #include "ui_vGSetting.h"
 #define qctr(s)  (QCoreApplication::tr(s))
+
+
+bool GetProperty(FrPluginProperty* _property) {
+    if (_property) {
+        _property->description = "Provide System Setting";
+        _property->name = "Setting";
+        _property->package = "app.setting.app";
+        _property->version = "0.0.1";
+        _property->logo = Svg2Pixmap(vGSetting::GetSvg(), vGp->Config().base().win_size());
+        return true;
+    }
+    else {
+        vGlog->warn("vGTime GetProperty is not allow nullptr");
+    }
+    return false;
+}
+
+FrPlugin* GetInstance() {
+    FrSettingApp* result = new FrSettingApp();
+    return result;
+}
+
+
 VGSETTING_EXPORT vGAppWidBase* get_object(vGMenuBase* _parent,vGPlugin*_plugin) {
     Q_INIT_RESOURCE(vGSetting);
     return reinterpret_cast<vGAppWidBase*>(new vGSetting(_parent, _plugin));
@@ -57,4 +80,38 @@ void vGSetting::UpdateSkin(){
     
     this->_info()->logo = Svg2Pixmap(GetSvg(), vGp->Config().base().win_size());
     vGAppWidBase::UpdateSkin();
+}
+//###############################
+FrSettingApp::FrSettingApp():
+    FrPlugin()
+{
+    vGlog->info("FrSettingApp constructed");
+}
+
+FrSettingApp::~FrSettingApp()
+{
+    vGlog->info("FrSettingApp destrcuted");
+
+}
+
+bool FrSettingApp::initialize(){
+    widget_ = new FrSettingWidget(vGp->menu(), this);
+    vGlog->info("FrSettingApp start");
+    return false;
+}
+
+bool FrSettingApp::event(QEvent* _e)
+{
+    vGlog->info("FrSettingApp Event:{}", _e->type());
+    return false;
+}
+
+FrSettingWidget::FrSettingWidget(vGMenuBase* _menu, FrPlugin* _plugin):
+    FrPluginWidget(nullptr,_plugin){
+    QPushButton* btn = new QPushButton(this);
+    btn->setGeometry(50, 50, 150, 200);
+    btn->setText("Setting!");
+    connect(btn, &QPushButton::pressed, this, [this]() {
+        vGp->postEvent(plugin(), new QEvent(QEvent::Enter));
+        });
 }

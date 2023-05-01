@@ -15,12 +15,12 @@ class VGCORE_EXPORT vGMenuBase;
 class VGCORE_EXPORT vGMessageBox;
 
 class VGCORE_EXPORT FrPluginPr;
-class VGCORE_EXPORT FrPluginWidget;
+class VGCORE_EXPORT FrPluginWidgetPr;
 
 class FrPlugin;	//插件实例对象
 class FrPluginData;	//插件管理元素
 class FrPluginManager; //插件管理
-class FrPluginApp; //插件窗口
+class FrPluginWidget; //插件窗口
 
 //主要是为了刷新时避免突然变化
 class vGImageLabel :public QLabel {
@@ -310,6 +310,8 @@ public:
 	//修改主菜单地址,提供接口给vGMainMenu自己设置
 	//不要输入空地址
 	void setMenu(QPointer<vGMenuBase> _point);
+
+	FrPluginManager* pluginManager();
 protected:
 	//打开日志文件，自定义文件无法开打则使用默认文件
 	//默认文件都打不开则重启
@@ -368,7 +370,7 @@ public:
 	//子类创建FrPluginWidget需要FrPlugin和vGMenuBase对象，
 	//!确保显示主菜单之后再来调用create函数，否则menu()为空
 	virtual void create();
-	QPointer<FrPluginWidget> widget()const;
+	QPointer<FrPluginWidgetPr> widget()const;
 protected:
 	QByteArray package_;//包名，格式 app.***.com
 	QByteArray version_;//版本，e.g. 1.0.1
@@ -386,18 +388,18 @@ protected:
 	//app对象，在调用create函数时会被创建   ==> 窗口后台
 	//destory会销毁该对象,释放相对应资源 ==> 应用后台
 	//服务可以不需要这个成员，也可以存在，作为后台设置
-	QPointer<FrPluginWidget> widget_;
-	friend class FrPluginWidget;
+	QPointer<FrPluginWidgetPr> widget_;
+	friend class FrPluginWidgetPr;
 	friend class vGApp; //主要是提供接口修改路径
 };
 //窗口基础类，这里主要隐藏信号槽连接
 // 1. 被通知隐藏窗口时，即失去对焦
 // 2. 更新皮肤样式时
-class FrPluginWidget:public QWidget {
+class FrPluginWidgetPr:public QWidget {
 	Q_OBJECT;
 public:
-	FrPluginWidget(vGMenuBase* _menubase, FrPluginPr* _pluginctr);
-	~FrPluginWidget();
+	FrPluginWidgetPr(vGMenuBase* _menubase, FrPluginPr* _pluginctr);
+	~FrPluginWidgetPr();
 	//获取该App的插件类
 	FrPluginPr& plugin()const;
 public slots:
@@ -422,7 +424,7 @@ protected:
 	QPixmap& logo() { return plugin().logo_; }
 private:
 	//不给weak_ptr 一是因为难处理，FrPlugin里面要create不好弄
-	//二是能确保FrPlugin生命周期  > FrPluginWidget 的生命周期
+	//二是能确保FrPlugin生命周期  > FrPluginWidgetPr 的生命周期
 	FrPluginPr* plugin_;
 };
 

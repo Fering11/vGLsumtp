@@ -47,6 +47,8 @@
 #include <QGraphicsOpacityEffect>
 #include <QParallelAnimationGroup>
 #include <QSequentialAnimationGroup>
+
+#include <QPushButton>
 // ../public
 //spdlog
 #include <spdlog/spdlog.h>

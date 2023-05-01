@@ -10,6 +10,7 @@ bool GetProperty(FrPluginProperty* _property){
         _property->name = "Time";
         _property->package = "www.time.app";
         _property->version = "0.0.1";
+        _property->logo= Svg2Pixmap(vGTime::GetSvg(), vGp->Config().base().win_size());
         return true;
     }
     else {
@@ -19,7 +20,8 @@ bool GetProperty(FrPluginProperty* _property){
 }
 
 FrPlugin* GetInstance() {
-
+    FrTimeApp* result = new FrTimeApp();
+    return result;
 }
 
 #define qctr (QCoreApplication::tr)
@@ -166,4 +168,39 @@ void FrGTime::update_time() {
     auto dt = QDateTime::currentDateTime();
     ui->lab_time->setText(dt.toString("hh:mm:ss"));
     ui->lab_date->setText(dt.toString("yyyy/MM/dd"));
+}
+
+//##########################################
+FrTimeApp::FrTimeApp():
+    FrPlugin(){
+    vGlog->info("FrTimeApp constructed");
+}
+
+FrTimeApp::~FrTimeApp()
+{
+    vGlog->info("FrTimeApp destructed");
+}
+
+bool FrTimeApp::initialize(){
+    widget_ = new FrTimeWidget(vGp->menu(), this);
+    vGlog->info("FrTimeApp start");
+    return true;
+}
+
+bool FrTimeApp::event(QEvent* _e)
+{
+    vGlog->info("FrTimeApp Event:{}",_e->type());
+    return FrPlugin::event(_e);
+}
+
+
+FrTimeWidget::FrTimeWidget(vGMenuBase* _menu, FrPlugin* _plugin) :
+    FrPluginWidget(nullptr, _plugin) //TODO 修改_menu
+{
+    QPushButton* btn = new QPushButton(this);
+    btn->setGeometry(50, 50, 150, 200);
+    btn->setText("Hello World!");
+    connect(btn, &QPushButton::pressed, this, [this]() {
+        vGp->postEvent(plugin(), new QEvent(QEvent::Enter));
+        });
 }
