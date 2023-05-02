@@ -5,11 +5,6 @@ vGMainWindow::vGMainWindow(QWidget *parent)
 	: QMainWindow(parent)
 	, ui(new Ui::MainWindow)
 {
-	//发生致命错误 退出
-	//TODO 完善代码
-	if (vGp->GetAttribute() & Critical) {
-		return;
-	}
 	ui->setupUi(this);
 	setFocusPolicy(Qt::NoFocus);
 

@@ -1001,6 +1001,7 @@ void vGApp::LoadPlugins()
     //QDir dir(R"(../plugins/release)");
 #endif
 #endif
+#if 0
 	dir.setFilter(QDir::Files | QDir::NoDotAndDotDot);
 	dir.setSorting(QDir::Name);
 	auto list = dir.entryInfoList();
@@ -1035,8 +1036,12 @@ void vGApp::LoadPlugins()
 		lib.unload();
 	}
 	plugins_.shrink_to_fit();
+#endif 
 	//new
 	manager_->load(dir.path());
+	//TEST
+	//auto ve = manager_->search("Setting");
+	//ve = manager_->searchPackage("app.setting.app");
 }
 
 void vGApp::LoadSkin()

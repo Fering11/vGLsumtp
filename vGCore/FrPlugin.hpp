@@ -17,14 +17,22 @@ class VGCORE_EXPORT FrPluginWidget; //插件窗口
 //插件信息
 struct FrPluginProperty {
 	QByteArray version;
-	QByteArray package;
+	QByteArray package; //www.time.app
 	QString description;
 	QString name;
 	QPixmap logo;
+	//返回格式{前缀域, 应用名, 属性}
+	static QByteArrayList SplitPackage(const QByteArray& _pk) {
+		QByteArrayList result;
+		int left = _pk.indexOf('.');
+		int right = _pk.indexOf('.', left + 1);
+		return { _pk.left(left),_pk.mid(left + 1,right - left - 1),_pk.mid(right + 1) };
+	}
 };
 //在主线程
 class FrPluginManager {
 public:
+	using SeReType = std::vector<FrPluginData*>;
 	FrPluginManager();
 	~FrPluginManager();
 	//!加载目录里面的插件
@@ -39,9 +47,27 @@ public:
 	bool remove(size_t _pos)TH_SAFETY;
 	//返回插件指针
 	std::vector<FrPluginData*> plugins()TH_SAFETY;
+	//释放所有插件
 	void release()TH_SAFETY;
+	//搜索,返回对应插件的指针
+	SeReType search(const QString& _name)TH_SAFETY;
+	SeReType searchPackage(const QByteArray& _package)TH_SAFETY;
+	
+	bool isExist(const QByteArray& _package)const;
 private:
 	bool __remove(std::vector<FrPluginData>::const_iterator _it);
+	//void Fn(const FrPluginProperty& _fr)
+	template<class _Fx>
+	SeReType __search(_Fx _fn) const {
+		SeReType result;
+		for (auto it = data_.cbegin(); it != data_.cend(); ++it) {
+			if (_fn(it->property())) {
+				result.push_back((FrPluginData*)&(*it));
+			}
+		}
+		return result;
+	}
+
 	QReadWriteLock lock_;
 	std::vector<FrPluginData> data_;
 };
@@ -79,10 +105,12 @@ public:
 	bool release(const int overtime = -1,bool force = false)TH_SAFETY;
 	//返回当前的线程对象，如果为空则说明线程没有开始运行
 	QThread* thread()const;
-	//开启线程
+	//开启线程,如果插件已经在运行，那么将什么也不做
 	void start(QThread::Priority = QThread::InheritPriority);
 	//是否是服务
 	bool isService()const;
+	//插件是否在运行
+	bool isRunning()const;
 private:
 	void _load(QDir _path)TH_SAFETY;
 	bool _is_invalid()const;

@@ -603,31 +603,6 @@ private:
 	static constexpr int dialog_right_side = 18; //距离右边框
 };
 
-/*
-* 1、DEBUG
-面向功能开发人员，一般在功能开发阶段使用，用来给开发人员检查功能是否正常的。
-此类日志只在开发阶段使用，版本不输出。
-
-2、INFO
-内测 版可输出此日志，用来查看新开发特性或者 bugfix 是否正常。
-上网版不输出。
-
-3、WARN
-不会对系统造成影响的非正常流程。
-上网版本输出。
-
-3、ERROR
-会对系统造成影响的非正常流程，可自我修复，不影响系统稳定性。
-上网版本输出。
-
-5、CRITICAL
-产生了不可逆的错误，系统无法正常工作。
-上网版本输出。
-
-另：
-日志只可记录系统运行状态，不可输出用户敏感数据。
-*/
-
 #define vGp              (static_cast<vGApp*>(QCoreApplication::instance()))
 #define vGlog            (vGp->_getLogger())
 #define vgDebug          (vGlog->debug)

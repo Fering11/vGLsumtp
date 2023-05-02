@@ -18,6 +18,26 @@ void FrPluginManager::release() {
 	}
 	data_.clear();
 }
+FrPluginManager::SeReType FrPluginManager::search(const QString& _name){
+	QReadLocker lock(&this->lock_);
+	return __search([_name](const FrPluginProperty& _property) {
+		return !_property.name.compare(_name);
+		});
+}
+FrPluginManager::SeReType FrPluginManager::searchPackage(const QByteArray& _package){
+	QReadLocker lock(&this->lock_);
+	return __search([_package](const FrPluginProperty& _property) {
+		return !_property.package.compare(_package);
+		});
+}
+bool FrPluginManager::isExist(const QByteArray& _package)const{
+	for (auto i = data_.begin(); i != data_.end(); ++i) {
+		if (!i->property().package.compare(_package)) {
+			return true;
+		}
+	}
+	return false;
+}
 void FrPluginManager::load(QDir _dir){
 	_dir.setFilter(QDir::Files | QDir::NoDotAndDotDot);
 	_dir.setSorting(QDir::Type);
@@ -68,8 +88,10 @@ bool FrPluginManager::loadPlugin(QString _file) {
 		//上锁
 		QWriteLocker lock(&this->lock_);
 		FrPluginData data(_file);
-		data_.push_back(std::move(data));
-		return true;
+		if (!isExist(data.property().package)) {
+			data_.push_back(std::move(data));
+			return true;
+		}
 	}
 	catch (const FrError&) {
 		//失败一般是文件错误导致的失败,FrError错误异常不处理
@@ -166,16 +188,18 @@ QThread* FrPluginData::thread()const{
 	plugin_thread_->start();
 	return plugin_thread_;
 }
-void FrPluginData::start(QThread::Priority _py){
-	QReadLocker lock(&this->lock_);
-	if (!plugin_thread_) {
-		//如果线程对象不存在就创建
-		lock.unlock();
-		plugin();
-		lock.relock();
+void FrPluginData::start(QThread::Priority _py) {
+	if (!isRunning()) {
+		QReadLocker lock(&this->lock_);
+		if (!plugin_thread_) {
+			//如果线程对象不存在就创建
+			lock.unlock();
+			plugin();
+			lock.relock();
+		}
+		object_->initialize();
+		plugin_thread_->start(_py);
 	}
-	object_->initialize();
-	plugin_thread_->start(_py);
 }
 //TODO 测试函数
 bool FrPluginData::isService() const{
@@ -183,6 +207,9 @@ bool FrPluginData::isService() const{
 	QByteArray package = property_.package;
 	int pos = package.lastIndexOf('.');
 	return package.right(package.size() - pos - 1).compare("app");
+}
+bool FrPluginData::isRunning() const{
+	return plugin_thread_ && plugin_thread_->isRunning();
 }
 bool FrPluginData::_is_invalid()const{
 	return f_get_property == 0 && f_get_instance == 0;
