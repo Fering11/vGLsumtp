@@ -801,7 +801,7 @@ void vGApp::initialize()
 	//!现在还没有初始化菜单
 	LoadPlugins();
 	//插件是必须存在至少一个，否则报错
-	if (plugins_.empty()) {
+	if (manager_->empty()) {
 		info_->attribute_ |= Critical;
 		vGlog->critical("The plug-in is not loaded correctly.");
 		throw FrError(FrErrorStatue::Peripheral, "The number of plugins is 0");

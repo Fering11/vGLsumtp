@@ -38,6 +38,12 @@ bool FrPluginManager::isExist(const QByteArray& _package)const{
 	}
 	return false;
 }
+size_t FrPluginManager::size() const{
+	return data_.size();
+}
+bool FrPluginManager::empty() const{
+	return data_.empty();
+}
 void FrPluginManager::load(QDir _dir){
 	_dir.setFilter(QDir::Files | QDir::NoDotAndDotDot);
 	_dir.setSorting(QDir::Type);
@@ -65,7 +71,7 @@ std::vector<FrPluginData*> FrPluginManager::plugins(){
 
 bool FrPluginManager::__remove(std::vector<FrPluginData>::const_iterator _it){
 	auto& fp = *_it;
-	if (fp.thread()) {
+	if (fp.isRunning()) {
 		//插件还存在，不删除
 		return false;
 	}
@@ -111,7 +117,7 @@ FrPluginData::FrPluginData(FrPluginData&& _obj)noexcept{
 	*this = std::move(_obj);
 }
 
-FrPluginData& FrPluginData::operator=(FrPluginData&& _obj){
+FrPluginData& FrPluginData::operator=(FrPluginData&& _obj)noexcept{
 	object_ = std::exchange(_obj.object_, nullptr);
 	f_get_instance = std::exchange(_obj.f_get_instance, nullptr);
 	f_get_property = std::exchange(_obj.f_get_property, nullptr);
@@ -129,7 +135,7 @@ FrPluginData::~FrPluginData(){
 	release();
 }
 bool FrPluginData::isInvalid()const{
-	//感觉没必要加锁,判断两个同为真的汇编代码也不多
+	//感觉没必要加锁,判断两个相同为真的汇编代码也不多
 	//QReadLocker lock(&this->lock_);
 	return _is_invalid();
 }
@@ -233,6 +239,7 @@ bool FrPluginData::release(const int _overtime, bool _force) {
 		//删除plugin_thread
 		plugin_thread_->deleteLater();
 		lock_.unlock();
+		vGp->processEvents();
 		return true;
 	}
 	//release上就是删除plugin_thread_
@@ -247,7 +254,7 @@ bool FrPluginData::release(const int _overtime, bool _force) {
 FrPlugin::FrPlugin():
 	QObject(nullptr), widget_(nullptr) {
 }
-
+//TODO 未知情况，第二个FrPlugin无法被正确回收
 FrPlugin::~FrPlugin(){
 	vGlog->info("Th:{} FrPlugin destructed", size_t(QThread::currentThreadId()));
 }

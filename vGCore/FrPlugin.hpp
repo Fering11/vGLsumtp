@@ -52,8 +52,10 @@ public:
 	//搜索,返回对应插件的指针
 	SeReType search(const QString& _name)TH_SAFETY;
 	SeReType searchPackage(const QByteArray& _package)TH_SAFETY;
-	
+	//是否存在这个插件
 	bool isExist(const QByteArray& _package)const;
+	size_t size()const;
+	bool empty()const;
 private:
 	bool __remove(std::vector<FrPluginData>::const_iterator _it);
 	//void Fn(const FrPluginProperty& _fr)
@@ -80,7 +82,7 @@ public:
 	FrPluginData(FrPluginData&& _object)noexcept;
 	FrPluginData(const FrPluginData&) = delete;
 	FrPluginData& operator=(const FrPluginData&) = delete;
-	FrPluginData& operator=(FrPluginData&&);
+	FrPluginData& operator=(FrPluginData&&)noexcept;
 	//根据path加载插件
 	//错误抛异常
 	FrPluginData(QDir _path)TH_SAFETY;
@@ -140,7 +142,7 @@ public:
 protected:
 	FrPluginWidget* widget_;
 };
-
+//在主线程中
 class FrPluginWidget:public QWidget {
 	Q_OBJECT
 public:

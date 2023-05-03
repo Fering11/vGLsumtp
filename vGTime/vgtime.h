@@ -82,6 +82,7 @@ class FrTimeWidget :public FrPluginWidget {
     Q_OBJECT
 public:
     FrTimeWidget(vGMenuBase* _menu, FrPlugin* _plugin);
+    void keyPressEvent(QKeyEvent* event);
 };
 
 

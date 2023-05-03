@@ -36,6 +36,9 @@ class FrSettingWidget :public FrPluginWidget {
     Q_OBJECT
 public:
     FrSettingWidget(vGMenuBase* _menu, FrPlugin* _plugin);
+
+protected:
+    void keyPressEvent(QKeyEvent* event);
 };
 
 

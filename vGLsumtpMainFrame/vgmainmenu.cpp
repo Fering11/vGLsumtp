@@ -170,8 +170,9 @@ void vGMainMenu::keyPressEvent(QKeyEvent* _event){
 		auto& pluginApp = vGp->pluginManager()->at(itemPos());
 		if (!pluginApp.isRunning()) {
 			pluginApp.start();
-			pluginApp.plugin()->widget()->show();
 		}
+		pluginApp.plugin()->widget()->show();
+		pluginApp.plugin()->widget()->setGeometry(0, 0, this->width(), this->height());
 		//pluginApp
 		//pluginApp->widget()->show();
 		//ac_enter();

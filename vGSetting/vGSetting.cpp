@@ -107,11 +107,25 @@ bool FrSettingApp::event(QEvent* _e)
 }
 
 FrSettingWidget::FrSettingWidget(vGMenuBase* _menu, FrPlugin* _plugin):
-    FrPluginWidget(nullptr,_plugin){
+    FrPluginWidget(_menu,_plugin){
     QPushButton* btn = new QPushButton(this);
     btn->setGeometry(50, 50, 150, 200);
     btn->setText("Setting!");
     connect(btn, &QPushButton::pressed, this, [this]() {
         vGp->postEvent(plugin(), new QEvent(QEvent::Enter));
         });
+}
+
+void FrSettingWidget::keyPressEvent(QKeyEvent* event){
+    switch (event->key())
+    {
+    case Qt::Key_Escape: {
+        //返回
+        this->hide();
+        break;
+    }
+    default:
+        break;
+    }
+
 }
