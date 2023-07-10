@@ -232,7 +232,8 @@ bool FrPluginData::release(const int _overtime, bool _force) {
 	//无论如何，一定要获取到锁之后才操作(_force仅仅对于thread)
 	//plugin_thread_为空则说明已经释放或者没有初始化plugin
 	if (plugin_thread_&&lock_.tryLockForWrite(_overtime)) {
-		plugin_thread_->exit();
+		object_->deleteLater();
+		plugin_thread_->exit();//exit导致事件循环结束
 		if (!plugin_thread_->wait(_overtime < 1 ?
 			QDeadlineTimer(QDeadlineTimer::Forever) : QDeadlineTimer(_overtime))) {
 			//如果超时了，那么直接强制删除

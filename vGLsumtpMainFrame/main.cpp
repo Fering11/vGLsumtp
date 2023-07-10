@@ -45,7 +45,7 @@ int startup(int argc, char* argv[])
 #endif
 	int exit_code = 0;
 	std::shared_ptr<vGAppInfomation> vgArgument(new vGAppInfomation());
-	vgArgument->version_ = QU8("0.0.1"); //版本
+	vgArgument->version_ = QU8("0.2.1"); //版本
 	vgArgument->app_name = QU8("vGLsumtp"); //app名称
 	//vgArgument->attribute_ = IntoApp;
 	vgArgument->attribute_ = NULL;
