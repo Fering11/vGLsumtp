@@ -1,6 +1,6 @@
 /*
 *	vGLsumtp head file
-*	¹ÜÀí²å¼ş·½Ãæ¹¦ÄÜ
+*	ç®¡ç†æ’ä»¶æ–¹é¢åŠŸèƒ½
 */
 
 #ifndef FP_PLUGIN_HEAD
@@ -9,19 +9,19 @@
 
 class vGMenuBase;
 
-class VGCORE_EXPORT FrPlugin;	//²å¼şÊµÀı¶ÔÏó
-class VGCORE_EXPORT FrPluginData;	//²å¼ş¹ÜÀíÔªËØ
-class VGCORE_EXPORT FrPluginManager; //²å¼ş¹ÜÀí
-class VGCORE_EXPORT FrPluginWidget; //²å¼ş´°¿Ú
-#define TH_SAFETY //Ïß³Ì°²È«Ö¸Ê¾·û
-//²å¼şĞÅÏ¢
+class VGCORE_EXPORT FrPlugin;	//æ’ä»¶å®ä¾‹å¯¹è±¡
+class VGCORE_EXPORT FrPluginData;	//æ’ä»¶ç®¡ç†å…ƒç´ 
+class VGCORE_EXPORT FrPluginManager; //æ’ä»¶ç®¡ç†
+class VGCORE_EXPORT FrPluginWidget; //æ’ä»¶çª—å£
+#define TH_SAFETY //çº¿ç¨‹å®‰å…¨æŒ‡ç¤ºç¬¦
+//æ’ä»¶ä¿¡æ¯
 struct FrPluginProperty {
 	QByteArray version;
 	QByteArray package; //www.time.app
 	QString description;
 	QString name;
 	QPixmap logo;
-	//·µ»Ø¸ñÊ½{Ç°×ºÓò, Ó¦ÓÃÃû, ÊôĞÔ}
+	//è¿”å›æ ¼å¼{å‰ç¼€åŸŸ, åº”ç”¨å, å±æ€§}
 	static QByteArrayList SplitPackage(const QByteArray& _pk) {
 		QByteArrayList result;
 		int left = _pk.indexOf('.');
@@ -29,34 +29,35 @@ struct FrPluginProperty {
 		return { _pk.left(left),_pk.mid(left + 1,right - left - 1),_pk.mid(right + 1) };
 	}
 };
-//ÔÚÖ÷Ïß³Ì
+//åœ¨ä¸»çº¿ç¨‹
 class FrPluginManager {
 public:
 	using SeReType = std::vector<FrPluginData*>;
 	FrPluginManager();
 	~FrPluginManager();
-	//!¼ÓÔØÄ¿Â¼ÀïÃæµÄ²å¼ş
+	//!åŠ è½½ç›®å½•é‡Œé¢çš„æ’ä»¶
 	void load(QDir _directory);
-	//!¼ÓÔØÖ¸¶¨µÄ²å¼ş
-	//²å¼ş¼ÓÔØÊ§°Ü·µ»Øfalse
+	//!åŠ è½½æŒ‡å®šçš„æ’ä»¶
+	//æ’ä»¶åŠ è½½å¤±è´¥è¿”å›false
 	bool loadPlugin(QString _directory)TH_SAFETY;
-	//STL vector::at·µ»Øº¯Êı
+	//STL vector::atè¿”å›å‡½æ•°
 	FrPluginData& at(size_t pos)TH_SAFETY;
-	//É¾³ı²å¼ş,_posÖ¸¶¨Î»ÖÃ£¬´íÎóÅ×³östdÒì³£
-	//²å¼ş±ØĞëÃ»ÓĞÔËĞĞ
+	//åˆ é™¤æ’ä»¶,_posæŒ‡å®šä½ç½®ï¼Œé”™è¯¯æŠ›å‡ºstdå¼‚å¸¸
+	//æ’ä»¶å¿…é¡»æ²¡æœ‰è¿è¡Œ
 	bool remove(size_t _pos)TH_SAFETY;
-	//·µ»Ø²å¼şÖ¸Õë
+	//è¿”å›æ’ä»¶æŒ‡é’ˆ
 	std::vector<FrPluginData*> plugins()TH_SAFETY;
-	//ÊÍ·ÅËùÓĞ²å¼ş
+	//é‡Šæ”¾æ‰€æœ‰æ’ä»¶
 	void release()TH_SAFETY;
-	//ËÑË÷,·µ»Ø¶ÔÓ¦²å¼şµÄÖ¸Õë
+	//æœç´¢,è¿”å›å¯¹åº”æ’ä»¶çš„æŒ‡é’ˆ
 	SeReType search(const QString& _name)TH_SAFETY;
 	SeReType searchPackage(const QByteArray& _package)TH_SAFETY;
-	//ÊÇ·ñ´æÔÚÕâ¸ö²å¼ş
+	//æ˜¯å¦å­˜åœ¨è¿™ä¸ªæ’ä»¶
 	bool isExist(const QByteArray& _package)const;
 	size_t size()const;
 	bool empty()const;
 private:
+	bool __is_exist(const QByteArray& _package)const;
 	bool __remove(std::vector<FrPluginData>::const_iterator _it);
 	//void Fn(const FrPluginProperty& _fr)
 	template<class _Fx>
@@ -70,10 +71,10 @@ private:
 		return result;
 	}
 
-	QReadWriteLock lock_;
+	mutable QReadWriteLock lock_;
 	std::vector<FrPluginData> data_;
 };
-//ÔÚÖ÷Ïß³Ì£¬´ú±íÒ»¸ö²å¼ş¶¯Ì¬¿â¶ÔÏó
+//åœ¨ä¸»çº¿ç¨‹ï¼Œä»£è¡¨ä¸€ä¸ªæ’ä»¶åŠ¨æ€åº“å¯¹è±¡
 class FrPluginData {
 public:
 	using fget_property_type = bool(*)(FrPluginProperty*);
@@ -83,66 +84,66 @@ public:
 	FrPluginData(const FrPluginData&) = delete;
 	FrPluginData& operator=(const FrPluginData&) = delete;
 	FrPluginData& operator=(FrPluginData&&)noexcept;
-	//¸ù¾İpath¼ÓÔØ²å¼ş
-	//´íÎóÅ×Òì³£
+	//æ ¹æ®pathåŠ è½½æ’ä»¶ ï¼Œé”™è¯¯æŠ›å¼‚å¸¸
 	FrPluginData(QDir _path)TH_SAFETY;
 	~FrPluginData()TH_SAFETY;
-	//Èç¹û²å¼ş¶ÔÏóÎŞĞ§£¬Ôò·µ»Øtrue
-	//²å¼ş¶ÔÏóÓĞĞ§²»´ú±íobject¶ÔÏó´æÔÚ
+	//å¦‚æœæ’ä»¶å¯¹è±¡æ— æ•ˆï¼Œåˆ™è¿”å›true
+	//æ’ä»¶å¯¹è±¡æœ‰æ•ˆä¸ä»£è¡¨objectå¯¹è±¡å­˜åœ¨
 	bool isInvalid()const;
-	//ÖØĞÂ»ñÈ¡²å¼şÊôĞÔ
+	//é‡æ–°è·å–æ’ä»¶å±æ€§
 	void updateProperty()TH_SAFETY;
-	//»ñÈ¡²å¼ş
-	//!Èç¹ûobject_¶ÔÏóÎª¿Õ£¬Ôò»á´´½¨¶ÔÏó
-	//²å¼ş¶ÔÏó²»ÕıÈ·»òÕßÎŞ·¨·ÖÅäµØÖ·Ê±(Ê§°Ü)·µ»Ønullptr
-	//TODO ÕâÀïÃ»ÓĞ¿ªÆôÏß³Ì£¬ºóĞø¸ù¾İÏîÄ¿ĞŞ¸Ä
+	//è·å–æ’ä»¶
+	//!å¦‚æœobject_å¯¹è±¡ä¸ºç©ºï¼Œåˆ™ä¼šåˆ›å»ºå¯¹è±¡
+	//æ’ä»¶å¯¹è±¡ä¸æ­£ç¡®æˆ–è€…æ— æ³•åˆ†é…åœ°å€æ—¶(å¤±è´¥)è¿”å›nullptr
+	//TODO è¿™é‡Œæ²¡æœ‰å¼€å¯çº¿ç¨‹ï¼Œåç»­æ ¹æ®é¡¹ç›®ä¿®æ”¹
 	QPointer<FrPlugin> plugin()TH_SAFETY;
 	QPointer<FrPlugin> plugin()const;
-	//»ñÈ¡²å¼şµÄÊôĞÔ
+	//è·å–æ’ä»¶çš„å±æ€§
 	const FrPluginProperty& property()const;
-	//ÊÍ·Å¸Ã²å¼ş¶ÔÏó£¬ÖÕÖ¹APPÔËĞĞ
-	// overtime ³¬Ê±Ê±¼ä£¬forceÊÇ·ñÇ¿ÖÆ(±ØĞëÏÈ»ñÈ¡Ëø)
-	//Èç¹û³ÌĞòÔÚÔËĞĞ£¬Ôò»áQThread::exitÍË³ö
-	//!³¬¹ıovertime²¢ÇÒforceÎªÕæ£¬Ôò»áµ÷ÓÃthreadµÄterminial
+	//é‡Šæ”¾è¯¥æ’ä»¶å¯¹è±¡ï¼Œç»ˆæ­¢APPè¿è¡Œ
+	// overtime è¶…æ—¶æ—¶é—´ï¼Œforceæ˜¯å¦å¼ºåˆ¶(å¿…é¡»å…ˆè·å–é”)
+	//å¦‚æœç¨‹åºåœ¨è¿è¡Œï¼Œåˆ™ä¼šQThread::exité€€å‡º
+	//!è¶…è¿‡overtimeå¹¶ä¸”forceä¸ºçœŸï¼Œåˆ™ä¼šè°ƒç”¨threadçš„terminial
 	bool release(const int overtime = -1,bool force = false)TH_SAFETY;
-	//·µ»Øµ±Ç°µÄÏß³Ì¶ÔÏó£¬Èç¹ûÎª¿ÕÔòËµÃ÷Ïß³ÌÃ»ÓĞ¿ªÊ¼ÔËĞĞ
+	//è¿”å›å½“å‰çš„çº¿ç¨‹å¯¹è±¡ï¼Œå¦‚æœä¸ºç©ºåˆ™è¯´æ˜çº¿ç¨‹æ²¡æœ‰å¼€å§‹è¿è¡Œ
+	//TODO éšæ‚£ï¼plugin_thread_=nullptræ—¶è¿è¡Œ
 	QThread* thread()const;
-	//¿ªÆôÏß³Ì,Èç¹û²å¼şÒÑ¾­ÔÚÔËĞĞ£¬ÄÇÃ´½«Ê²Ã´Ò²²»×ö
+	//å¼€å¯çº¿ç¨‹,å¦‚æœæ’ä»¶å·²ç»åœ¨è¿è¡Œï¼Œé‚£ä¹ˆå°†ä»€ä¹ˆä¹Ÿä¸åš
 	void start(QThread::Priority = QThread::InheritPriority);
-	//ÊÇ·ñÊÇ·şÎñ
+	//æ˜¯å¦æ˜¯æœåŠ¡
 	bool isService()const;
-	//²å¼şÊÇ·ñÔÚÔËĞĞ
+	//æ’ä»¶æ˜¯å¦åœ¨è¿è¡Œ
 	bool isRunning()const;
 private:
 	void _load(QDir _path)TH_SAFETY;
 	bool _is_invalid()const;
 
-	QReadWriteLock lock_;
+	mutable QReadWriteLock lock_;
 	fget_property_type f_get_property;
 	fget_instance_type f_get_instance;
-	//²å¼şËùÔÚµÄÏß³Ì
-	//ÉúÃüÖÜÆÚÖ»±Èobject_³¤Ò»µã(¾ßÌå²é¿´release)
+	//æ’ä»¶æ‰€åœ¨çš„çº¿ç¨‹
+	//ç”Ÿå‘½å‘¨æœŸåªæ¯”object_é•¿ä¸€ç‚¹(å…·ä½“æŸ¥çœ‹release)
 	QThread* plugin_thread_;
 	QPointer<FrPlugin> object_;
 	FrPluginProperty property_;
 };
 
-//ÔÚÁíÒ»¸öÏß³ÌÖĞ
+//åœ¨å¦ä¸€ä¸ªçº¿ç¨‹ä¸­
 class FrPlugin :public QObject {
 	Q_OBJECT
 public:
-	//²å¼ş³õÊ¼»¯²»´ú±íÁ¢Âí³õÊ¼»¯´°¿Ú¶ÔÏó
+	//æ’ä»¶åˆå§‹åŒ–ä¸ä»£è¡¨ç«‹é©¬åˆå§‹åŒ–çª—å£å¯¹è±¡
 	FrPlugin();
 	~FrPlugin();
-	//³õÊ¼»¯²å¼ş£¬ÇëÔÚÕâÊ±³õÊ¼»¯´°¿Ú¶ÔÏó
-	//Õâ¸öº¯Êı»áÔÚ²å¼şÆô¶¯µÄÊ±ºòµ÷ÓÃ
+	//åˆå§‹åŒ–æ’ä»¶ï¼Œè¯·åœ¨è¿™æ—¶åˆå§‹åŒ–çª—å£å¯¹è±¡
+	//è¿™ä¸ªå‡½æ•°ä¼šåœ¨æ’ä»¶å¯åŠ¨çš„æ—¶å€™è°ƒç”¨
 	virtual bool initialize();
-	//»ñÈ¡´°¿Ú¶ÔÏó
+	//è·å–çª—å£å¯¹è±¡
 	virtual QPointer<FrPluginWidget> widget()const;
 protected:
 	FrPluginWidget* widget_;
 };
-//ÔÚÖ÷Ïß³ÌÖĞ
+//åœ¨ä¸»çº¿ç¨‹ä¸­
 class FrPluginWidget:public QWidget {
 	Q_OBJECT
 public:

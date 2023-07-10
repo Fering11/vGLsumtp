@@ -7,7 +7,7 @@
 
 FrPluginManager::FrPluginManager(){
 }
-//¶ÔÃ¿Ò»¸ö²å¼ş½øĞĞÏú»Ù
+//å¯¹æ¯ä¸€ä¸ªæ’ä»¶è¿›è¡Œé”€æ¯
 FrPluginManager::~FrPluginManager(){
 	release();
 }
@@ -31,6 +31,10 @@ FrPluginManager::SeReType FrPluginManager::searchPackage(const QByteArray& _pack
 		});
 }
 bool FrPluginManager::isExist(const QByteArray& _package)const{
+	QReadLocker lock(&this->lock_);
+	return __is_exist(_package);
+}
+bool FrPluginManager::__is_exist(const QByteArray& _package)const {
 	for (auto i = data_.begin(); i != data_.end(); ++i) {
 		if (!i->property().package.compare(_package)) {
 			return true;
@@ -39,9 +43,11 @@ bool FrPluginManager::isExist(const QByteArray& _package)const{
 	return false;
 }
 size_t FrPluginManager::size() const{
+	QReadLocker lock(&this->lock_);
 	return data_.size();
 }
 bool FrPluginManager::empty() const{
+	QReadLocker lock(&this->lock_);
 	return data_.empty();
 }
 void FrPluginManager::load(QDir _dir){
@@ -53,12 +59,12 @@ void FrPluginManager::load(QDir _dir){
 		try{
 			loadPlugin(file.filePath());
 		}catch (...){
-			//Òì³£ÊÓÎªÎÄ¼ş´íÎó£¬²»´¦Àí
+			//å¼‚å¸¸è§†ä¸ºæ–‡ä»¶é”™è¯¯ï¼Œä¸å¤„ç†
 		}
 	}
 }
-//·ÀÖ¹Íâ²¿Ö±½Ó²Ù×÷data_
-//FrPluginDataÏß³Ì²Ù×÷Ïß³Ì°²È«
+//é˜²æ­¢å¤–éƒ¨ç›´æ¥æ“ä½œdata_
+//FrPluginDataçº¿ç¨‹æ“ä½œçº¿ç¨‹å®‰å…¨
 std::vector<FrPluginData*> FrPluginManager::plugins(){
 	QReadLocker lock(&this->lock_);
 	std::vector<FrPluginData*> result;
@@ -72,7 +78,7 @@ std::vector<FrPluginData*> FrPluginManager::plugins(){
 bool FrPluginManager::__remove(std::vector<FrPluginData>::const_iterator _it){
 	auto& fp = *_it;
 	if (fp.isRunning()) {
-		//²å¼ş»¹´æÔÚ£¬²»É¾³ı
+		//æ’ä»¶è¿˜å­˜åœ¨ï¼Œä¸åˆ é™¤
 		return false;
 	}
 	data_.erase(_it);
@@ -91,16 +97,17 @@ FrPluginData& FrPluginManager::at(size_t _pos){
 
 bool FrPluginManager::loadPlugin(QString _file) {
 	try {
-		//ÉÏËø
-		QWriteLocker lock(&this->lock_);
+		//ä¸Šé”
+		QWriteLocker lock(&this->lock_);//TODO æ›´æ”¹é”çš„ä½ç½®ï¼Œè®©å®ƒæŒæœ‰çš„æ—¶é—´å°½é‡çŸ­
 		FrPluginData data(_file);
-		if (!isExist(data.property().package)) {
+		if (!__is_exist(data.property().package)) {
 			data_.push_back(std::move(data));
 			return true;
 		}
+		//TODO é’ˆå¯¹ç›¸åŒçš„æ’ä»¶åº”è¯¥åšå‡ºå¤„ç†ï¼ˆç‰ˆæœ¬ä¸åŒï¼‰
 	}
 	catch (const FrError&) {
-		//Ê§°ÜÒ»°ãÊÇÎÄ¼ş´íÎóµ¼ÖÂµÄÊ§°Ü,FrError´íÎóÒì³£²»´¦Àí
+		//å¤±è´¥ä¸€èˆ¬æ˜¯æ–‡ä»¶é”™è¯¯å¯¼è‡´çš„å¤±è´¥,FrErroré”™è¯¯å¼‚å¸¸ä¸å¤„ç†
 		//if (_error.code() != FrErrorStatue::InvalidFile) {}
 	}
 	catch (...) {
@@ -135,28 +142,27 @@ FrPluginData::~FrPluginData(){
 	release();
 }
 bool FrPluginData::isInvalid()const{
-	//¸Ğ¾õÃ»±ØÒª¼ÓËø,ÅĞ¶ÏÁ½¸öÏàÍ¬ÎªÕæµÄ»ã±à´úÂëÒ²²»¶à
-	//QReadLocker lock(&this->lock_);
+	//xæ„Ÿè§‰æ²¡å¿…è¦åŠ é”,åˆ¤æ–­ä¸¤ä¸ªç›¸åŒä¸ºçœŸçš„æ±‡ç¼–ä»£ç ä¹Ÿä¸å¤š
+	QReadLocker lock(&this->lock_);
 	return _is_invalid();
 }
 void FrPluginData::updateProperty(){
 	QWriteLocker lock(&this->lock_); 
 	f_get_property(&this->property_);
 }
-//Ö»ÓĞÎÄ¼şÊÇ¿ÉÒÔ¼ÓÔØµÄ²¢ÇÒ°üº¬ËùĞèº¯ÊıÔò²»»áÅ×Òì³£
+//åªæœ‰æ–‡ä»¶æ˜¯å¯ä»¥åŠ è½½çš„å¹¶ä¸”åŒ…å«æ‰€éœ€å‡½æ•°åˆ™ä¸ä¼šæŠ›å¼‚å¸¸
 void FrPluginData::_load(QDir _path){
 	QLibrary lib(_path.absolutePath());
 	lib.load();
 	if (lib.isLoaded()) {
-		//ÉÏËø
+		//ä¸Šé”
 		QWriteLocker lock(&this->lock_);
 		f_get_instance = reinterpret_cast<fget_instance_type>(lib.resolve("GetInstance"));
 		f_get_property = reinterpret_cast<fget_property_type>(lib.resolve("GetProperty"));
 		if (!this->_is_invalid()) {
-			//¼ÓÔØĞÅÏ¢£¬µ«²»¼ÓÔØ¶ÔÏó
+			//åŠ è½½ä¿¡æ¯ï¼Œä½†ä¸åŠ è½½å¯¹è±¡
 			f_get_property(&this->property_);
 			return;
-			//updateProperty(); ËÀËøÏÖÏó
 		}
 		FrThrowError(FrErrorStatue::InvalidFile, "The Plugin haven't standard function");
 	}
@@ -167,13 +173,13 @@ QPointer<FrPlugin> FrPluginData::plugin() {
 	QWriteLocker lock(&this->lock_);
 	object_ = f_get_instance();
 	if (object_.isNull()) {
-		//²å¼ş¶ÔÏó´íÎó£¬ÎŞ·¨Õı³£·µ»Ø²å¼şµØÖ·
+		//æ’ä»¶å¯¹è±¡é”™è¯¯ï¼Œæ— æ³•æ­£å¸¸è¿”å›æ’ä»¶åœ°å€
 		vGlog->error("QPointer<FrPlugin> FrPluginData::plugin():can't get the plugin's instance");
 		return nullptr;
 	}
 	plugin_thread_ = new QThread();
 	object_->moveToThread(plugin_thread_);
-	//±£Ö¤FrPluginÕıÈ·Îö¹¹
+	//ä¿è¯FrPluginæ­£ç¡®ææ„
 	//QObject::connect(plugin_thread_, &QThread::finished, object_, &FrPlugin::deleteLater);
 	QObject::connect(plugin_thread_, &QThread::finished, object_, [this]() {
 		vGlog->info("FrPluginData Thread finished,Now is preparing to delete the object");
@@ -183,11 +189,12 @@ QPointer<FrPlugin> FrPluginData::plugin() {
 }
 	
 QPointer<FrPlugin> FrPluginData::plugin()const{
+	QReadLocker lock(&this->lock_);
 	return object_;
 }
 const FrPluginProperty& FrPluginData::property() const{
-	//·µ»Ø½á¹¹ÌåµÄÍ¬Ê±ÓÖ¸üĞÂÁËĞÅÏ¢£¬±È½ÏÉÙ¼û£¬²»¿¼ÂÇ
-	//¿¼ÂÇËÙ¶È£¬¹Ê·µ»ØÒıÓÃ
+	//è¿”å›ç»“æ„ä½“çš„åŒæ—¶åˆæ›´æ–°äº†ä¿¡æ¯ï¼Œæ¯”è¾ƒå°‘è§ï¼Œä¸è€ƒè™‘
+	//è€ƒè™‘é€Ÿåº¦ï¼Œæ•…è¿”å›å¼•ç”¨(è™½ç„¶è¿™æ˜¯å±é™©çš„è¡Œä¸º)
 	return property_;
 }
 QThread* FrPluginData::thread()const{
@@ -198,7 +205,7 @@ void FrPluginData::start(QThread::Priority _py) {
 	if (!isRunning()) {
 		QReadLocker lock(&this->lock_);
 		if (!plugin_thread_) {
-			//Èç¹ûÏß³Ì¶ÔÏó²»´æÔÚ¾Í´´½¨
+			//å¦‚æœçº¿ç¨‹å¯¹è±¡ä¸å­˜åœ¨å°±åˆ›å»º
 			lock.unlock();
 			plugin();
 			lock.relock();
@@ -207,9 +214,9 @@ void FrPluginData::start(QThread::Priority _py) {
 		plugin_thread_->start(_py);
 	}
 }
-//TODO ²âÊÔº¯Êı
+//TODO æµ‹è¯•å‡½æ•°
 bool FrPluginData::isService() const{
-	//²»´æÔÚ´óÁ¿¿½±´£¬ÇÒproperty²»¾­³£¸üĞÂ£¬²»Ê¹ÓÃ»¥³âËø
+	//ä¸å­˜åœ¨å¤§é‡æ‹·è´ï¼Œä¸”propertyä¸ç»å¸¸æ›´æ–°ï¼Œä¸ä½¿ç”¨äº’æ–¥é”
 	QByteArray package = property_.package;
 	int pos = package.lastIndexOf('.');
 	return package.right(package.size() - pos - 1).compare("app");
@@ -220,30 +227,33 @@ bool FrPluginData::isRunning() const{
 bool FrPluginData::_is_invalid()const{
 	return f_get_property == 0 && f_get_instance == 0;
 }
-//¸Ãº¯Êı»á±»ÖØ¸´µ÷ÓÃ(plugin_thread_ÒÑ¾­deleteLaterµÄÇé¿öÏÂ)
+//è¯¥å‡½æ•°ä¼šè¢«é‡å¤è°ƒç”¨(plugin_thread_å·²ç»deleteLaterçš„æƒ…å†µä¸‹)
 bool FrPluginData::release(const int _overtime, bool _force) {
-	//ÎŞÂÛÈçºÎ£¬Ò»¶¨Òª»ñÈ¡µ½ËøÖ®ºó²Å²Ù×÷(_force½ö½ö¶ÔÓÚthread)
-	//plugin_thread_Îª¿ÕÔòËµÃ÷ÒÑ¾­ÊÍ·Å»òÕßÃ»ÓĞ³õÊ¼»¯plugin
+	//æ— è®ºå¦‚ä½•ï¼Œä¸€å®šè¦è·å–åˆ°é”ä¹‹åæ‰æ“ä½œ(_forceä»…ä»…å¯¹äºthread)
+	//plugin_thread_ä¸ºç©ºåˆ™è¯´æ˜å·²ç»é‡Šæ”¾æˆ–è€…æ²¡æœ‰åˆå§‹åŒ–plugin
 	if (plugin_thread_&&lock_.tryLockForWrite(_overtime)) {
 		plugin_thread_->exit();
 		if (!plugin_thread_->wait(_overtime < 1 ?
 			QDeadlineTimer(QDeadlineTimer::Forever) : QDeadlineTimer(_overtime))) {
-			//Èç¹û³¬Ê±ÁË£¬ÄÇÃ´Ö±½ÓÇ¿ÖÆÉ¾³ı
-			//TODOÔÚÏß³Ì½øĞĞ²âÊÔ(QEvent)
+			//å¦‚æœè¶…æ—¶äº†ï¼Œé‚£ä¹ˆç›´æ¥å¼ºåˆ¶åˆ é™¤
+			//TODOåœ¨çº¿ç¨‹è¿›è¡Œæµ‹è¯•(QEvent)
 			vGlog->info("thread {} can't be released", size_t(QThread::currentThreadId()));
-			if (_force)	plugin_thread_->terminate();
+			if (_force) {
+				plugin_thread_->terminate();
+				vGlog->info("thread {} has been terminated", size_t(QThread::currentThreadId()));
+			}
 			lock_.unlock();
-			return _force;//Ä¬ÈÏÇ¿ÖÆÊÍ·ÅÊÇ³É¹¦µÄ
+			return _force;//é»˜è®¤å¼ºåˆ¶é‡Šæ”¾æ˜¯æˆåŠŸçš„
 		}
-		//ÏÖÔÚÏß³ÌÒÑ¾­Í£Ö¹ÏÂÀ´£¬FrPluginÒ²ÒÑ¾­±»Îö¹¹
-		//É¾³ıplugin_thread
+		//ç°åœ¨çº¿ç¨‹å·²ç»åœæ­¢ä¸‹æ¥ï¼ŒFrPluginä¹Ÿå·²ç»è¢«ææ„
+		//åˆ é™¤plugin_thread
 		plugin_thread_->deleteLater();
 		lock_.unlock();
 		vGp->processEvents();
 		return true;
 	}
-	//releaseÉÏ¾ÍÊÇÉ¾³ıplugin_thread_
-	//»áµ½ÕâÀï¾ÍËµÃ÷Ã»ÓĞÄÃµ½Ëø»òÕßplugin_thread_ÊÇ¿Õ
+	//releaseä¸Šå°±æ˜¯åˆ é™¤plugin_thread_
+	//ä¼šåˆ°è¿™é‡Œå°±è¯´æ˜æ²¡æœ‰æ‹¿åˆ°é”æˆ–è€…plugin_thread_æ˜¯ç©º
 	return plugin_thread_ == nullptr;
 }
 
@@ -254,7 +264,7 @@ bool FrPluginData::release(const int _overtime, bool _force) {
 FrPlugin::FrPlugin():
 	QObject(nullptr), widget_(nullptr) {
 }
-//TODO Î´ÖªÇé¿ö£¬µÚ¶ş¸öFrPluginÎŞ·¨±»ÕıÈ·»ØÊÕ
+//TODO æœªçŸ¥æƒ…å†µï¼Œç¬¬äºŒä¸ªFrPluginæ— æ³•è¢«æ­£ç¡®å›æ”¶
 FrPlugin::~FrPlugin(){
 	vGlog->info("Th:{} FrPlugin destructed", size_t(QThread::currentThreadId()));
 }
@@ -273,7 +283,7 @@ QPointer<FrPluginWidget> FrPlugin::widget()const{
 
 FrPluginWidget::FrPluginWidget(vGMenuBase* _parent, FrPlugin* _plugin)
 	:QWidget(_parent), plugin_(_plugin) {
-	this->setVisible(false);//Ò»¿ªÊ¼³õÊ¼»¯ÉèÖÃÎª²»¿É¼û
+	this->setVisible(false);//ä¸€å¼€å§‹åˆå§‹åŒ–è®¾ç½®ä¸ºä¸å¯è§
 }
 
 QPointer<FrPlugin> FrPluginWidget::plugin() const
