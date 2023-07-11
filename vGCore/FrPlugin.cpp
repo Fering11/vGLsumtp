@@ -177,14 +177,20 @@ QPointer<FrPlugin> FrPluginData::plugin() {
 		vGlog->error("QPointer<FrPlugin> FrPluginData::plugin():can't get the plugin's instance");
 		return nullptr;
 	}
-	plugin_thread_ = new QThread();
-	object_->moveToThread(plugin_thread_);
+	plugin_thread_.reset(new QThread());
+	object_->moveToThread(plugin_thread_.get());
 	//保证FrPlugin正确析构
-	//QObject::connect(plugin_thread_, &QThread::finished, object_, &FrPlugin::deleteLater);
-	QObject::connect(plugin_thread_, &QThread::finished, object_, [this]() {
+
+	//下面老代码，在停止的事件循环中deleteLater似乎没作用
+	/*QObject::connect(plugin_thread_, &QThread::finished, object_, [this]() {
 		vGlog->info("FrPluginData Thread finished,Now is preparing to delete the object");
 		object_->deleteLater();
-		});
+		});*/
+	connect(this, &FrPluginData::_Object_Delete, object_, [this]() {
+		vGlog->info("FrPluginData Thread finished,Now is preparing to delete the object");
+		object_->deleteLater();
+		//? condition race
+		},Qt::QueuedConnection);
 	return object_;
 }
 	
@@ -197,7 +203,7 @@ const FrPluginProperty& FrPluginData::property() const{
 	//考虑速度，故返回引用(虽然这是危险的行为)
 	return property_;
 }
-QThread* FrPluginData::thread()const{
+std::shared_ptr<QThread> FrPluginData::thread()const{
 	plugin_thread_->start();
 	return plugin_thread_;
 }
@@ -232,8 +238,13 @@ bool FrPluginData::release(const int _overtime, bool _force) {
 	//无论如何，一定要获取到锁之后才操作(_force仅仅对于thread)
 	//plugin_thread_为空则说明已经释放或者没有初始化plugin
 	if (plugin_thread_&&lock_.tryLockForWrite(_overtime)) {
-		object_->deleteLater();
-		plugin_thread_->exit();//exit导致事件循环结束
+		//x object_->deleteLater(); 放入主线程中不执行
+		emit _Object_Delete();
+		//std::this_thread::sleep_for(std::chrono::seconds(20));
+		//? 这样做会不会导致FrPlugin来不及回收
+		//todo 在FrPlugin析构函数里放入sleep 5s
+		plugin_thread_->exit();
+		//plugin_thread_->exit();//exit导致事件循环结束
 		if (!plugin_thread_->wait(_overtime < 1 ?
 			QDeadlineTimer(QDeadlineTimer::Forever) : QDeadlineTimer(_overtime))) {
 			//如果超时了，那么直接强制删除
@@ -246,9 +257,12 @@ bool FrPluginData::release(const int _overtime, bool _force) {
 			lock_.unlock();
 			return _force;//默认强制释放是成功的
 		}
+		//! danger
+		//! 直接删了
+		plugin_thread_.reset();
 		//现在线程已经停止下来，FrPlugin也已经被析构
 		//删除plugin_thread
-		plugin_thread_->deleteLater();
+
 		lock_.unlock();
 		vGp->processEvents();
 		return true;
@@ -265,7 +279,7 @@ bool FrPluginData::release(const int _overtime, bool _force) {
 FrPlugin::FrPlugin():
 	QObject(nullptr), widget_(nullptr) {
 }
-//TODO 未知情况，第二个FrPlugin无法被正确回收
+//TODO 未知情况，第一个FrPlugin无法被正确回收
 FrPlugin::~FrPlugin(){
 	vGlog->info("Th:{} FrPlugin destructed", size_t(QThread::currentThreadId()));
 }

@@ -137,7 +137,7 @@ void vGMainMenu::ac_turnRight()
 void vGMainMenu::ac_enter()
 {
 	vGp->mt_plugin.lock();
-	vIterator it(&vGp->Plugins(), itemPos() + 1);
+	vIterator it(&vGp->Plugins(), itemPos());
 	auto plugin = (vGp->Plugins()[it.pos()]);
 	//已经创建了就不会重复创建
 	plugin->create(this);

@@ -75,7 +75,8 @@ private:
 	std::vector<FrPluginData> data_;
 };
 //在主线程，代表一个插件动态库对象
-class FrPluginData {
+class FrPluginData:public QObject {
+	Q_OBJECT
 public:
 	using fget_property_type = bool(*)(FrPluginProperty*);
 	using fget_instance_type = FrPlugin*(*)();
@@ -107,13 +108,15 @@ public:
 	bool release(const int overtime = -1,bool force = false)TH_SAFETY;
 	//返回当前的线程对象，如果为空则说明线程没有开始运行
 	//TODO 隐患！plugin_thread_=nullptr时运行
-	QThread* thread()const;
+	std::shared_ptr<QThread> thread()const;
 	//开启线程,如果插件已经在运行，那么将什么也不做
 	void start(QThread::Priority = QThread::InheritPriority);
 	//是否是服务
 	bool isService()const;
 	//插件是否在运行
 	bool isRunning()const;
+signals:
+	void _Object_Delete();
 private:
 	void _load(QDir _path)TH_SAFETY;
 	bool _is_invalid()const;
@@ -123,7 +126,7 @@ private:
 	fget_instance_type f_get_instance;
 	//插件所在的线程
 	//生命周期只比object_长一点(具体查看release)
-	QThread* plugin_thread_;
+	std::shared_ptr<QThread> plugin_thread_;
 	QPointer<FrPlugin> object_;
 	FrPluginProperty property_;
 };
