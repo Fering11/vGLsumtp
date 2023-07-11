@@ -103,7 +103,7 @@ bool FrSettingApp::initialize(){
 bool FrSettingApp::event(QEvent* _e)
 {
     vGlog->info("FrSettingApp Event:{}", _e->type());
-    return false;
+    return FrPlugin::event(_e);
 }
 
 FrSettingWidget::FrSettingWidget(vGMenuBase* _menu, FrPlugin* _plugin):

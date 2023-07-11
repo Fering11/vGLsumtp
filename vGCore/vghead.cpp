@@ -931,9 +931,9 @@ void vGApp::setLogger()
 					(de_name, info_->log_file_size * 1024, info_->log_file_count, false, spdlog::file_event_handlers{});
 				file_logger->set_level(spdlog::level::level_enum(info_->log_level));
 
-				auto console_logger = std::make_shared<spdlog::sinks::wincolor_stdout_sink_mt>(spdlog::color_mode::always);
+				auto console_logger = std::make_shared<spdlog::sinks::wincolor_stdout_sink_mt>(); 
 				console_logger->set_level(spdlog::level::trace);
-				log_ = std::make_shared<spdlog::async_logger>(
+				log_ = std::make_shared<spdlog::async_logger>( 
 					vGp->applicationName().toStdString(),
 					spdlog::sinks_init_list{ console_logger,file_logger }, spdlog::thread_pool());
 				//Debug下每2秒刷新一次

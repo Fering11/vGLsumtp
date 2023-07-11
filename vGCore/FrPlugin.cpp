@@ -264,7 +264,7 @@ bool FrPluginData::release(const int _overtime, bool _force) {
 		//删除plugin_thread
 
 		lock_.unlock();
-		vGp->processEvents();
+		//vGp->processEvents();
 		return true;
 	}
 	//release上就是删除plugin_thread_
