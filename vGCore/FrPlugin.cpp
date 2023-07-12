@@ -50,6 +50,10 @@ bool FrPluginManager::empty() const{
 	QReadLocker lock(&this->lock_);
 	return data_.empty();
 }
+void FrPluginManager::clear(){
+	QWriteLocker lock(&this->lock_);
+	data_.clear();
+}
 void FrPluginManager::load(QDir _dir){
 	_dir.setFilter(QDir::Files | QDir::NoDotAndDotDot);
 	_dir.setSorting(QDir::Type);
@@ -65,9 +69,9 @@ void FrPluginManager::load(QDir _dir){
 }
 //防止外部直接操作data_
 //FrPluginData线程操作线程安全
-std::vector<FrPluginData*> FrPluginManager::plugins(){
+std::vector<QPointer<FrPluginData>> FrPluginManager::plugins(){
 	QReadLocker lock(&this->lock_);
-	std::vector<FrPluginData*> result;
+	std::vector<QPointer<FrPluginData>> result;
 	result.reserve(data_.size());
 	for (auto& i : data_) {
 		result.push_back(std::addressof(i));
@@ -285,7 +289,7 @@ FrPlugin::~FrPlugin(){
 }
 
 bool FrPlugin::initialize(){
-	return false;
+	return true;
 }
 
 QPointer<FrPluginWidget> FrPlugin::widget()const{

@@ -8,7 +8,7 @@
 #include "vGConfig.h"
 
 class vGMenuBase;
-
+//可以确保的是，插件初始化发生在日志初始化之后
 class VGCORE_EXPORT FrPlugin;	//插件实例对象
 class VGCORE_EXPORT FrPluginData;	//插件管理元素
 class VGCORE_EXPORT FrPluginManager; //插件管理
@@ -45,17 +45,18 @@ public:
 	//删除插件,_pos指定位置，错误抛出std异常
 	//插件必须没有运行
 	bool remove(size_t _pos)TH_SAFETY;
-	//返回插件指针
-	std::vector<FrPluginData*> plugins()TH_SAFETY;
+	//返回插件指针(拷贝)
+	std::vector<QPointer<FrPluginData>> plugins()TH_SAFETY;
 	//释放所有插件
 	void release()TH_SAFETY;
 	//搜索,返回对应插件的指针
 	SeReType search(const QString& _name)TH_SAFETY;
 	SeReType searchPackage(const QByteArray& _package)TH_SAFETY;
-	//是否存在这个插件
-	bool isExist(const QByteArray& _package)const;
-	size_t size()const;
-	bool empty()const;
+	//是否存在这个插件 
+	bool isExist(const QByteArray& _package)const TH_SAFETY;
+	size_t size()const TH_SAFETY;
+	bool empty()const TH_SAFETY;
+	void clear()TH_SAFETY;
 private:
 	bool __is_exist(const QByteArray& _package)const;
 	bool __remove(std::vector<FrPluginData>::const_iterator _it);
@@ -105,7 +106,7 @@ public:
 	// overtime 超时时间，force是否强制(必须先获取锁)
 	//如果程序在运行，则会QThread::exit退出
 	//!超过overtime并且force为真，则会调用thread的terminial
-	bool release(const int overtime = -1,bool force = false)TH_SAFETY;
+	bool release(const int over_msec= -1,bool force = false)TH_SAFETY;
 	//返回当前的线程对象，如果为空则说明线程没有开始运行
 	//TODO 隐患！plugin_thread_=nullptr时运行
 	std::shared_ptr<QThread> thread()const;
@@ -140,6 +141,7 @@ public:
 	~FrPlugin();
 	//初始化插件，请在这时初始化窗口对象
 	//这个函数会在插件启动的时候调用
+	//初始化成功返回true
 	virtual bool initialize();
 	//获取窗口对象
 	virtual QPointer<FrPluginWidget> widget()const;

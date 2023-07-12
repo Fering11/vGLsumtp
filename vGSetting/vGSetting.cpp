@@ -97,7 +97,7 @@ FrSettingApp::~FrSettingApp()
 bool FrSettingApp::initialize(){
     widget_ = new FrSettingWidget(vGp->menu(), this);
     vGlog->info("FrSettingApp start");
-    return false;
+    return true;
 }
 
 bool FrSettingApp::event(QEvent* _e)

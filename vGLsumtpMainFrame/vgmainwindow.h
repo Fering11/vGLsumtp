@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "FrMenu.hpp"
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -18,5 +20,6 @@ public slots:
 	void UpdateSkin();
 private:
 	Ui::MainWindow *ui;
+	FrMenu* menu;
 };
 #endif // MAINWINDOW_H

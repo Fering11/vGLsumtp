@@ -1,15 +1,18 @@
 #include "vgmainwindow.h"
 #include "ui_mainwindow.h"
 #include "vgmainmenu.h"
+
 vGMainWindow::vGMainWindow(QWidget *parent)
 	: QMainWindow(parent)
 	, ui(new Ui::MainWindow)
 {
 	ui->setupUi(this);
 	setFocusPolicy(Qt::NoFocus);
+	menu = new FrMenu(ui->background, this);
 
 	//严格来说，只能有一个widget
-	ui->background->addWidget(new vGMainMenu(ui->background, this));
+	//ui->background->addWidget(new vGMainMenu(ui->background, this));
+	//ui->background->addWidget(menu);
 	this->setObjectName(tr("vGMainWidget")); 
 	UpdateSkin();
 }

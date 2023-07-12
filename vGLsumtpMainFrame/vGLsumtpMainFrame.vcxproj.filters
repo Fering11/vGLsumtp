@@ -56,12 +56,18 @@
     <ClCompile Include="vgmainwindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="FrMenu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="vgmainmenu.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="vgmainwindow.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="FrMenu.hpp">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

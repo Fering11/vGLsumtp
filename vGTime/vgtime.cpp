@@ -184,7 +184,7 @@ FrTimeApp::~FrTimeApp()
 bool FrTimeApp::initialize(){
     widget_ = new FrTimeWidget(vGp->menu(), this);
     vGlog->info("FrTimeApp start");
-    return true;
+    return false;
 }
 
 bool FrTimeApp::event(QEvent* _e)

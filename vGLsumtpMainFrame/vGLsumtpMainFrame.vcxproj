@@ -206,6 +206,7 @@
     </QtUic>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="FrMenu.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="vgmainmenu.cpp" />
     <ClCompile Include="vgmainwindow.cpp" />
@@ -229,6 +230,9 @@
     <None Include="vGLsumtpMainFrame.pro" />
     <QtRcc Include="vgRes.qrc">
     </QtRcc>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="FrMenu.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

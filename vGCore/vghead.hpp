@@ -13,7 +13,7 @@ class VGCORE_EXPORT vGImageLabel;
 class VGCORE_EXPORT vGApp;
 class VGCORE_EXPORT vGMenuBase;
 class VGCORE_EXPORT vGMessageBox;
-
+class VGCORE_EXPORT FrMenuBase;
 class VGCORE_EXPORT FrPluginPr;
 class VGCORE_EXPORT FrPluginWidgetPr;
 
@@ -311,7 +311,7 @@ public:
 	//不要输入空地址
 	void setMenu(QPointer<vGMenuBase> _point);
 
-	FrPluginManager* pluginManager();
+	FrPluginManager& pluginManager();
 protected:
 	//打开日志文件，自定义文件无法开打则使用默认文件
 	//默认文件都打不开则重启
@@ -327,13 +327,14 @@ protected:
 	void LoadSkin();
 private:
 	vGC_Skin skin_;
+	//old
 	value_type plugins_; //插件
 	std::set<vGPlugin*> activities_;//活动的插件（创建了对象,来源于plugins_）
 	//!fplugins的内存实在插件全局区上，不是堆分配内存
 	std::vector<std::shared_ptr<FrPluginPr>> fplugins_;
 
-	FrPluginManager* manager_;
-
+	//插件管理器
+	std::unique_ptr<FrPluginManager> manager_;
 	//指向主菜单
 	QPointer<vGMenuBase> menu_;
 	std::shared_ptr<vGConfig> config_;
@@ -537,6 +538,9 @@ public:
 	_NODISCARD difference_type pos()const {
 		return current_;
 	}
+	_NODISCARD bool vaild()const {
+		return object_ != nullptr;
+	}
 protected:
 	void _Chceck_Pointer() const {
 #if _ITERATOR_DEBUG_LEVEL != 0
@@ -548,6 +552,27 @@ private:
 	_MyVector* object_;
 	difference_type current_;
 };
+
+//主界面菜单
+class FrMenuBase :public QWidget {
+	Q_OBJECT
+public:
+	FrMenuBase(QLayout* _layout,QWidget* _parent=nullptr);
+	//加载指定插件
+	virtual void launchPlugin(FrPluginData* _target) = 0;
+	virtual void releasePlugin(FrPluginData* _target) = 0;
+	virtual void switchPlugin(FrPluginData* _starter, FrPluginData* _destination) = 0;
+	virtual void killPlugin(FrPluginData* _target) = 0;
+protected:
+	QLayout& background();
+	//因为layout在初始化时已经确定了的
+	//activity在开始时为null，故返回指针
+	FrPluginData* activity();
+
+	FrPluginData* activity_; //前台插件
+	QLayout* background_ ;
+};
+
 
 //消息框
 enum vGMsgType {
@@ -601,6 +626,7 @@ private:
 	static constexpr int dialog_height = dialog_width / 2.232;
 	static constexpr int dialog_bottom_side = 70;//距离下边框	
 	static constexpr int dialog_right_side = 18; //距离右边框
+	static constexpr int dialog_end_right_offset = 100; //结束时往x的偏移量(处理结束时出现对话框)
 };
 
 #define vGp              (static_cast<vGApp*>(QCoreApplication::instance()))
@@ -608,7 +634,6 @@ private:
 #define vgDebug          (vGlog->debug)
 //info才能输出信息
 #define vgTrace			 (vGlog->info)
-
 
 #define DebugBox(title,msg)   (QMessageBox::information(nullptr,title,msg))
 //配置文件默认位置  

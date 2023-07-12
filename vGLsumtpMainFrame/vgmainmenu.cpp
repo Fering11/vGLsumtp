@@ -16,7 +16,7 @@ vGMainMenu::vGMainMenu(QLayout* _back, QWidget* parent) :
 	description()->setText((*(it + 1))->info().description);
 #else
 	//new version
-	auto plugin = vGp->pluginManager()->plugins();
+	auto plugin = vGp->pluginManager().plugins();
 	vIterator its(&plugin, itemPos());
 	left()->setPixmap((*its)->property().logo);
 	center()->setPixmap((*(its + 1))->property().logo);
@@ -99,7 +99,7 @@ void vGMainMenu::ac_turnLeft()
 	description()->setText((*(it + 1))->info().description);
 #else
 	add();
-	auto plugin = vGp->pluginManager()->plugins();
+	auto plugin = vGp->pluginManager().plugins();
 	vIterator its(&plugin, itemPos() - 1);
 	item_pos_ = its.pos();
 	left()->setNextPixmap((*its)->property().logo);
@@ -123,7 +123,7 @@ void vGMainMenu::ac_turnRight()
 	description()->setText((*(it + 1))->info().description);
 #else
 	sub();
-	auto plugin = vGp->pluginManager()->plugins();
+	auto plugin = vGp->pluginManager().plugins();
 	vIterator its(&plugin, itemPos() + 1);
 	item_pos_ = its.pos();
 	left()->setNextPixmap((*its)->property().logo);
@@ -167,7 +167,7 @@ void vGMainMenu::keyPressEvent(QKeyEvent* _event){
 	case Qt::Key_Return:
 	case Qt::Key_Enter: {
 		vGlog->info("vGMainMenu::keyPressEvent,pos:{}",itemPos());
-		auto& pluginApp = vGp->pluginManager()->at(itemPos());
+		auto& pluginApp = vGp->pluginManager().at(itemPos());
 		if (!pluginApp.isRunning()) {
 			pluginApp.start();
 		}

@@ -1,0 +1,54 @@
+﻿#include "FrMenu.hpp"
+
+// ///////////////////////////  FrMenu ////////////////////////////
+////
+////
+
+FrMenu::FrMenu(QLayout* _lay, QWidget* _parent):
+	FrMenuBase(_lay,_parent), wid_switch(),wid_back()
+{
+	wid_switch = new FrMenuSwitch(this);
+	wid_back = new QWidget;
+
+	//应用开启时，先显示主菜单
+	wid_switch->setGeometry(0, 0, this->width(), this->height());
+	wid_switch->show();
+	launchPlugin(FrMenuPlugin);
+}
+
+void FrMenu::launchPlugin(FrPluginData* _target){
+	if (_target == FrMenuPlugin) {
+		layout().addWidget(this);
+		this->show();
+	}
+
+}
+
+void FrMenu::releasePlugin(FrPluginData* _target){
+
+}
+
+void FrMenu::switchPlugin(FrPluginData* _starter, FrPluginData* _destination){
+
+}
+
+void FrMenu::killPlugin(FrPluginData* _target){
+
+}
+// ///////////////////////////  FrMenuSwitch ////////////////////////////
+////
+////
+
+FrMenuSwitch::FrMenuSwitch(FrMenu* _menu):
+	QWidget(_menu), frplugin(),iter(&frplugin,0)
+{
+	updatePlugin();
+	QLabel* text = new QLabel(this);
+	text->setGeometry(20, 20, 100, 100);
+	text->setText((QString::fromUtf8(R"(一共有%1个插件)")).arg(frplugin.size()));
+}
+
+void FrMenuSwitch::updatePlugin(){
+	frplugin = vGp->pluginManager().plugins();
+	iter = vIterator(&frplugin, 0);
+}

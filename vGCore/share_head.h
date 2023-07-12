@@ -24,6 +24,7 @@
 #include <QThread>
 #include <QString>
 #include <QLayout>
+#include <QPixmap>
 #include <QPointer>
 #include <QPainter>
 #include <QProcess>

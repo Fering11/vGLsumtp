@@ -771,7 +771,7 @@ vGApp::vGApp(int argc, char* argv[], std::shared_ptr<vGAppInfomation> _argu) :
 		//TODO 让守护进程检视
 		//已经设置至多重启5次
 	}
-	manager_ = new FrPluginManager();
+	manager_ .reset(new FrPluginManager());
 	//日志文件检查由setLogger执行，错误会抛出异常
 }
 
@@ -827,9 +827,7 @@ vGApp::~vGApp()
 	if (config_) { //如果是错误退出的话,config_为空
 		config_reader::save_config(config_);
 	}
-	if (manager_) {
-		delete manager_;
-	}
+	manager_->clear();
 }
 bool vGApp::notify(QObject* _receiver, QEvent* _event) {
 	return QApplication::notify(_receiver, _event);
@@ -901,8 +899,8 @@ void vGApp::setMenu(QPointer<vGMenuBase> _point){
 	menu_ = _point;
 }
 
-FrPluginManager* vGApp::pluginManager(){
-	return manager_;
+FrPluginManager& vGApp::pluginManager(){
+	return *manager_.get();
 }
 
 void vGApp::setLogger()
@@ -1210,7 +1208,8 @@ QLibrary* vGPlugin::library()const{
 
 // ///////////////////// vGMessageBox ///////////////////////////####################
 vGMessageBox::vGMessageBox(QWidget* parent, vGMsgType _type)
-	: QWidget(parent), delay_time_(0), background_(nullptr), title_(nullptr)
+	: QWidget(parent, Qt::Widget | Qt::WindowStaysOnTopHint), delay_time_(0),
+	background_(nullptr), title_(nullptr)
 {
 	assert(parent != 0);
 	setAttribute(Qt::WA_DeleteOnClose);
@@ -1311,7 +1310,8 @@ void vGMessageBox::close() {
 	ppos->setDuration(_get_duration() * 0.66);
 	ppos->setEasingCurve(_get_easing_curve());
 	ppos->setStartValue(up_end);
-	up_end.setX(up_end.x() + this->width());
+	//躲远一点
+	up_end.setX(up_end.x() + this->width()+ dialog_end_right_offset);
 	ppos->setEndValue(up_end);
 
 	group->addAnimation(dialog_up);
@@ -1513,4 +1513,19 @@ bool operator==(const vGPlugin& _Left, const vGPlugin& _Right)
 	return !QFileInfo(_Left.library()->fileName()).fileName().
 		compare(QFileInfo(_Right.lib_->fileName()).fileName());
 }
+// //////////////////////////////////////////// FrMenuBase ///////////////////////////////////
+/////
+////
+FrMenuBase::FrMenuBase(QLayout* _layout,QWidget* _parent):
+	QWidget(_parent),activity_(nullptr),background_(_layout)
+{
+	assert(_layout);
+}
 
+FrPluginData* FrMenuBase::activity(){
+	return activity_;
+}
+
+QLayout& FrMenuBase::background(){
+	return *background_;
+}
